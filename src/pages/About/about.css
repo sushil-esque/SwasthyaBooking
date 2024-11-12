@@ -1,0 +1,44 @@
+.aboutPage {
+  display: flex;
+  height: auto;
+  margin: 0px 100px;
+}
+.text {
+  width: 50%;
+  background-color: #eaeaea;
+}
+.image {
+  width: 50%;
+}
+.welcomeBox {
+  background-color: #ea6309;
+  margin-top: 55px;
+  color: white;
+  padding: 20px;
+  margin-left: 30%;
+  width: 70%;
+  position: relative;
+}
+.actualText {
+  margin: 50px 150px 20px 150px;
+  font-size: larger;
+  font-style: italic;
+  line-height: 1.5;
+}
+.image img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.readmoreBtn {
+  margin-left: 150px;
+  margin-top: 0px;
+}
+.readmoreBtn button {
+  background-color: black;
+  color: white;
+  padding: 8px 40px;
+}
+.readmoreBtn button:hover {
+  background-color: #292e33;
+}

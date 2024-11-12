@@ -1,0 +1,59 @@
+.siginPage{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0px 0px 6px gray;
+    align-items: center;
+    padding: 20px;
+    padding-bottom: 60px;
+    border: none;
+    border-radius: 5px;
+    width: 250px;
+    gap: 10px;
+    margin: 50px 0px 150px;
+    height: fit-content;
+    background-color: white;
+
+    
+}
+.signinWrapper{
+    display: flex;
+    justify-content: center;
+    /* margin-top: 50px; */
+    background-color:  rgb(252, 246, 246);
+    height: 100%;
+  
+}
+.btn{
+    width: 100%;
+}
+.btn button{
+    width: 100%;
+    background-color: black;
+    color: white;
+    border-radius: 8px;
+    padding: 5px 0px;
+    margin: 10px 0px;
+
+}
+.userName , .Password {
+    width: 100%;
+}
+.user {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+}
+.user input{
+    width: 100%;
+    border: none;
+    outline: none;
+}
+.user button{
+    background-color: white;
+    border: none;
+}
+.toLogin a:hover{
+text-decoration: underline;
+}
