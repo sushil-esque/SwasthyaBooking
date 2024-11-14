@@ -17,32 +17,65 @@
 .docCard {
   display: flex;
   flex-direction: column;
-  width: 250px;
-  height: 400px;
+  width: 299px;
+  padding: 30px;
+  height: auto;
   background-color: white;
-  align-items: center;
-  border-radius: 30px;
+  /* align-items: center; */
+  padding-top: 20px;
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+.docCard:hover {
+  transform: translateY(-10px); /* Move the card up */
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2); /* Increase shadow for a lifted look */
+}
+
 .docImage img {
-  width: 200px;
-  height: 200px;
+  width: 299px;
+  height: 274px;
   object-fit: cover;
-  border-radius: 50%;
   margin-bottom: 20px;
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
 }
+.doctorName {
+  font-size: 1.875rem;
+  font-weight: 400;
+  margin-top: 10px;
+}
+.socials {
+  display: flex;
+  gap: 30px;
+  margin-top: 20px;
+  color: #f7743d;
+  font-size: 1.5rem;
+}
+
 .cardContainer {
   display: flex;
   flex-wrap: wrap;
-  gap: 50px;
+  gap: 30px;
   justify-content: center;
   margin: 0px 153px 20px;
 }
-.features {
+.docDesc {
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1rem;
+  margin: 11px 0 0;
+  line-height: 1.8;
+  word-wrap: break-word;
+}
+
+/* .features {
   font-style: italic;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
+} */
 .profileNav {
   font-size: large;
   margin-top: 10px;
@@ -55,6 +88,11 @@
 .profileNav:hover {
   color: #e2ab94;
 }
+.profileNav button {
+  padding: 10px 15px;
+  border-radius: 5px;
+  background-color: #f7743d;
+}
 .searchBar {
   display: flex;
   justify-content: center;
@@ -64,7 +102,6 @@
   width: 400px;
   padding: 0 8px;
   border-radius: 10px;
-
 }
 .searchBar input {
   width: 400px;
@@ -73,33 +110,63 @@
   border: none;
   outline: none;
 }
-.docProfileBody{
+.docProfileBody {
   margin: 50px 100px;
 }
-.spec-exp{
+.spec-exp {
   display: flex;
   gap: 10px;
   align-items: center;
-  color: rgb(75 85 99 );
+  color: rgb(75 85 99);
   margin-top: 0;
 }
-.spec-exp button{
+.spec-exp button {
   background-color: white;
   height: fit-content;
   padding: 3px 5px;
   border: 1px solid #eeeff1;
   border-radius: 10px;
-
 }
-.docProfileDesc{
-  border: 1px solid  rgba(0, 0, 0, 0.246);
+.docProfileDesc {
+  border: 1px solid rgba(0, 0, 0, 0.246);
   border-radius: 8px;
   padding: 30px;
+  width: 100%;
 }
-.docProfileDesc h2{
+.docProfileDesc h2 {
   margin-bottom: 0;
 }
-.docAbout h5{
+.docAbout h5 {
   margin-top: 16px;
   margin-bottom: 0px;
+}
+.availability {
+  margin-top: 50px;
+  margin-left: 318px;
+}
+.time-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: rgb(148 148 148);
+}
+.time-slots button {
+  background-color: white;
+  border-color: rgb(148 148 148);
+  padding: 0px 20px;
+  border-radius: 30px;
+}
+.time-slots button:focus {
+  background-color: #0000ff;
+  color: white;
+}
+.appointmentButton {
+  margin-top: 20px;
+}
+.appointmentButton button {
+  padding: 10px 40px;
+  border-radius: 20px;
+  font-size: large;
+  color: white;
+  background-color: #0000ff;
 }

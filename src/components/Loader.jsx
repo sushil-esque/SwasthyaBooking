@@ -1,0 +1,18 @@
+import "./Loader.css"
+function Loader() {
+    return (
+      <div style={{height:"100vh",
+          width:"100%",
+          display:"flex",
+          justifyContent:"center",
+          alignItems:"center",
+          textAlign:"center",
+          
+  
+      }}>
+  <div className="lds-dual-ring"></div>    
+  </div>
+    )
+  }
+  
+  export default Loader
