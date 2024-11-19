@@ -11,7 +11,10 @@ function Layout() {
       
     }}>
         <Header/>
+        <div className="outlet">
         <Outlet/>
+        </div>
+       
         <Footer/>
     </div>
   )

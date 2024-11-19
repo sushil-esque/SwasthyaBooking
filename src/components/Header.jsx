@@ -1,49 +1,91 @@
-import { NavLink } from "react-router-dom"
+import {
+  faChevronDown,
+  faCircleChevronDown,
+  faUser,
+  faUserAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 function Header() {
+  const navigate = useNavigate();
+  const [isActive, setIsActive] = useState(false);
+  const token = localStorage.getItem("token");
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.alert("You are logged out");
+    window.location.reload();
+  };
+
   return (
     <div className="headerMain">
-        <div className="logo">
-            <img src="/logo.png" alt="logo" />
-        </div>
-        <div className="navigation">
-            <nav>
-                <ul>
-                    <li>
-                        <NavLink to={"/home"}>
-                        Home
-                        </NavLink>
-                        </li>
-                    <li>
-                        <NavLink to={"/findDoctors"}>
-                        Find Doctor
-                        </NavLink>
-    
-                       </li>
-                    <li>
-                        <NavLink to={"/healthPackages"}>
-                        Health Packages
-                        </NavLink>
-                       </li>
-                    <li>
-                        <NavLink to={"/about"}>
-                        About
-                        </NavLink>
-                        </li>  
-                        <li>
-                            <NavLink to={"/login"}>
-                                <button className="login">Login </button>
-                            </NavLink>
-                        </li>
-                        {/* <li>
+      <div className="logo">
+        <NavLink to={"/home"}>
+        <img src="/logo.png" alt="logo" />
+        </NavLink>
+       
+      </div>
+      <div className="navigation">
+        <nav>
+          <ul>
+            <li>
+              <NavLink to={"/home"}>Home</NavLink>
+            </li>
+            <li>
+              <NavLink to={"/findDoctors"}>Find Doctor</NavLink>
+            </li>
+            <li>
+              <NavLink to={"/healthPackages"}>Health Packages</NavLink>
+            </li>
+            <li>
+              <NavLink to={"/about"}>About</NavLink>
+            </li>
+          </ul>
+
+          {token ? (
+            //   <li onClick={handleLogout} >
+            //     <button className="login">Logout </button>
+
+            //   </li>
+            <div>
+              <div
+                className="dropDown"
+                style={{ display: "flex", gap: "5px" }}
+                onClick={() => {
+                  setIsActive(!isActive);
+                }}
+              >
+                <FontAwesomeIcon icon={faUserAlt} />
+                <div>
+                  <FontAwesomeIcon icon={faChevronDown} />
+                </div>
+                {isActive && (
+                  <div className="dropDownContent">
+                    <NavLink to={"/UserDashboard"}>Dashboard</NavLink>
+                    <hr />
+                    <NavLink to={"/"} onClick={handleLogout}>
+                      Logout
+                    </NavLink>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <NavLink to={"/login"}>
+              <button className="login">Login </button>
+            </NavLink>
+          )}
+
+          {/* <li>
                             <NavLink to={"/signin"}>
                                 <button className="signin">Sign In</button>
                             </NavLink>
                         </li> */}
-                </ul>
-            </nav>
-        </div>
+        </nav>
+      </div>
     </div>
-  )
+  );
 }
 
-export default Header
+export default Header;

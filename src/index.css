@@ -2,13 +2,17 @@
   display: flex;
   justify-content: space-between;
   box-shadow: 0 4px 1px -1px gray;
-  padding: 0 20px;
+  padding: 0 40px;
   align-items: center;
-
+ width: 100%;
   background-color: white;
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+.outlet{
+  margin-top: 50px;
 }
 .headerMain nav ul {
   list-style: none;
@@ -19,26 +23,53 @@
 a {
   text-decoration: none;
   color: black;
-  width: 100%;
+  /* width: 100%; */
 }
 .login {
   background-color: black;
   color: white;
   padding: 5px 8px;
   border-radius: 5px;
+  cursor: pointer;
 }
-.signin {
+.dropDown button{
+  cursor: pointer;
+}
+/* .dropDown:hover .dropDownContent{
+  display: block;
+} */
+.dropDownContent{
+
+position: absolute;
+top: 50px;
+right: 10px;
+background-color: white;
+box-shadow: 2px 2px 5px hsla(0, 0%, 0%, 0.8);
+padding: 10px;
+}
+.dropDown{
+  
+}
+.dropDown a{
+  color: black;
+  display: block;
+}
+.dropDown a:active{
+  color: black;
+}
+
+/* .signin {
   background-color: white;
   color: black;
   padding: 5px 8px;
   border-radius: 5px;
-}
-.main {
+} */
+/* .main {
   height: 90vh;
   margin: 0 100px;
   margin-top: 20px;
   margin-top: 0px;
-}
+} */
 * {
   font-family: Arial;
 }
@@ -60,7 +91,7 @@ footer {
 .footerBody {
   display: flex;
   gap: 150px;
-  margin: 100px 100px 0px;
+  margin: 80px 100px 0px;
   justify-content: space-between;
 }
 .footerBody ul li {
@@ -75,11 +106,16 @@ footer {
   text-align: center;
   border: 1px solid  rgba(0, 0, 0, 0.246);
 }
+nav{
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
 
 button {
   cursor: pointer;
 }
-a.active {
+nav ul a.active {
   /* color: rgb(110, 97, 97); */
   color: #feb234;
 }
@@ -88,4 +124,12 @@ a.active {
   height: 50px;
   width: 150px;
   object-fit: contain;
+}
+.userLayout{
+  display: flex;
+  margin: 50px 100px;
+  gap: 10px;
+}
+.userOutlet{
+  width: 860px;
 }

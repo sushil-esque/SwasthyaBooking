@@ -14,16 +14,20 @@
   height: 250px;
   box-shadow: 0px 0px 6px gray;
 }
-
+.loginPage form{
+  width: 100%;
+}
 .userInput {
   display: flex;
   gap: 5px;
   margin-top: 5px;
+  width: 100%;
 }
 .userInput input {
   border: none;
   outline: none;
   width: 100%;
+  background-color: white;
 }
 .namePw {
   width: 100%;
@@ -31,6 +35,8 @@
 .namePw button {
   border: none;
   background-color: white;
+  width: 24px; /* Ensure a fixed width */
+  height: 24px; /* Ensure a fixed height */
 }
 .loginBtn {
   width: 100%;

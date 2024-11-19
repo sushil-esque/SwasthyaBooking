@@ -9,6 +9,13 @@ import SignIn from "./pages/Login/SignIn";
 import DoctorProfile from "./pages/DoctorProfile";
 import DoctorPage from "./pages/FIndDoctors/DoctorPage";
 import DocProfile from "./pages/FIndDoctors/DocProfile";
+import UserDashboard from "./pages/User/UserDashboard";
+import Protected from "./components/Protected";
+import UserAppointments from "./pages/User/UserAppointments";
+import Favorites from "./pages/User/Favorites";
+import ProfileSettings from "./pages/User/ProfileSettings";
+import ChangePassword from "./pages/User/ChangePassword";
+import UserLayout from "./components/UserLayout";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -23,44 +30,24 @@ const router = createBrowserRouter(
       <Route path="healthPackages" element={<HealthPackages/>}/>
       <Route path="login" element={<Login/>}/>
       <Route path="signin" element={<SignIn/>}/>
+<Route path="userDashboard" element={<Protected><UserLayout/></Protected>}>
+{/* <Route index element={<UserDashboard/>}/> */}
+<Route index element={<UserAppointments/>}/>
 
+<Route path="appointments" element={<UserAppointments/>}/>
+<Route path="favorite" element={<Favorites/>}/>
+<Route path="profileSettings" element={<ProfileSettings/>}/>
+<Route path="changePassword" element={<ChangePassword/>}/>
+
+
+
+ </Route>
 
 
     </Route>
   )
 )
-// ([
-//   {
-//     path: "/",
-//     children: [
-//       {
-//         path: "/",
-//         element: <Home />,
-//       },
-//       {
-//         path: "/home",
-//         element: <Home />,
-//       },
-//       {
-//         path: "/about",
-//         element: <About />,
-//       },
-//       {
-//         path: "/findDoctors",
-//         element: <FindDoctors />,
-//       },
-//       {
-//         path: "/healthPackages",
-//         element: <HealthPackages />,
-//       },
-//       {
-//         path: "/login",
-//         element: <Login/>
-//       }
-//     ],
-//     element: <Layout/>,
-//   },
-// ]);
+
 function App() {
   return (
     <>

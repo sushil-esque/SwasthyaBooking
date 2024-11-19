@@ -1,0 +1,217 @@
+
+.userMenu{
+    display: flex;
+    margin: 0px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 5px 0px, rgba(0, 0, 0, 0.1) 0px 0px 1px 0px;    height: fit-content;
+    width: fit-content;
+    align-items: center;
+    flex-direction: column;
+    gap: 5px;
+}
+.userMenu img{
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 2px solid #c5d3f5;
+    padding: 2px;
+   
+    
+}
+.userMenuImageContainer{
+  margin-top: 20px;
+  margin-bottom: 0px;
+
+}
+.userMenuProfileName{
+  margin-top: 0px;
+}
+.userMenuContent ul{
+    display: flex;
+    flex-direction: column;
+    list-style-type: none;
+    gap: 20px;
+    padding: 20px;
+    margin: 0px;
+}
+.userMenu h3{
+margin: 0px;
+}
+.userDashboardBody{
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+}
+.userDashboardContainer{
+    margin: 50px 200px;
+}
+
+  .userMenuContent ul li :hover {
+    background-color: #f0f0f0; /* Light background color on hover */
+    color: #007bff; /* Blue text color on hover */
+  } 
+  
+ 
+  
+  .userMenuContent ul li a {
+    text-decoration: none; /* Remove underline from links */
+    color: #333; /* Default text color */
+    padding: 10px 10px 10px 20px; /* Add padding to make space for the vertical line */
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .userMenuContent ul li a:hover {
+    background-color: #f0f0f0; 
+    color: #007bff; 
+  }
+  
+  .userMenuContent ul li a.active {
+    background-color: #007bff; 
+    color: #fff; 
+  }
+  .userMenuContent a{
+    display: flex;
+    gap: 10px;
+  }
+ .profile-settings-container{
+    width: 100%;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 5px 0px, rgba(0, 0, 0, 0.1) 0px 0px 1px 0px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+
+ }
+ .profile-settings-form{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+ }
+ .profile-picture{
+    width: 150px;
+    height: 150px;
+    position: relative;
+    border-radius: 100%;
+    border: 6px solid #f8f8f8;
+
+ }
+ .profile-settings-header{
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+ }
+
+ .form-field{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 40%;
+ }
+ .input-group{
+  color: rgb(102 102 102);
+
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    border: 1px solid #e4e4e4;
+    padding: 5px 7px;
+    align-items: center;
+ }
+  .input-field{
+    width: 100%;
+  }
+  .ChangePasswordContainer{
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 5px 0px, rgba(0, 0, 0, 0.1) 0px 0px 1px 0px;
+display: flex;
+flex-direction: column;
+padding: 80px;
+align-items: center;
+ }
+ .changePasswordForm{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+ }
+ .updateButton{
+    margin-top: 20px;
+}
+/* Wrapper for the profile picture */
+.profile-picture-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 150px; /* Adjust size as needed */
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #ccc; /* Optional border for style */
+}
+
+/* Profile picture styling */
+.UserProfile-picture{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Pencil icon (edit button) */
+.edit-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: #fff;
+  border-radius: 50%;
+  padding: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.edit-icon:hover {
+  background-color: #f0f0f0;
+}
+
+/* Hide the file input */
+.file-input-hidden {
+  display: none;
+}
+.form-actions{
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+.form-actions .update-button{
+  padding: 10px 20px;
+  color: white;
+  background-color: #007bff;
+  border-radius: 8px;
+  border: none;
+}
+.updateButton{
+  padding: 10px 20px;
+  color: white;
+  background-color: #007bff;
+  border-radius: 8px;
+  border: none;
+}
+.input-group button{
+  border: none;
+  background-color: transparent;
+  width: 24px; /* Ensure a fixed width */
+  height: 24px; /* Ensure a fixed height */
+  padding: 1px;
+}
+.input-group input{
+  outline: none;
+  border: none;
+}
+
+  

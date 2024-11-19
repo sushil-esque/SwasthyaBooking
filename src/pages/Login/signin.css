@@ -8,7 +8,7 @@
     padding-bottom: 60px;
     border: none;
     border-radius: 5px;
-    width: 250px;
+    width: 350px;
     gap: 10px;
     margin: 50px 0px 150px;
     height: fit-content;
@@ -44,6 +44,7 @@
     align-items: center;
     gap: 5px;
     margin-top: 5px;
+    width: 100%;
 }
 .user input{
     width: 100%;
@@ -56,4 +57,7 @@
 }
 .toLogin a:hover{
 text-decoration: underline;
+}
+.siginPage form{
+    width: 100%;
 }
