@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAppointments } from "../../api/user";
+import { getAppointments } from "../../../api/user";
 import { useState } from "react";
 
-function UserAppointments() {
+function Appointments() {
   const { data } = useQuery({
     queryKey: ["userAppointments"],
     queryFn: getAppointments,
@@ -116,7 +116,10 @@ function UserAppointments() {
           </thead>
           <tbody>
             {finalData?.map((appointment) => (
-              <tr key={appointment.appointment_id} className="bg-white border-b">
+              <tr
+                key={appointment.appointment_id}
+                className="bg-white border-b"
+              >
                 <th
                   scope="row"
                   className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
@@ -125,7 +128,9 @@ function UserAppointments() {
                 </th>
                 <td className="px-6 py-4">
                   <div>{appointment.appointment_date}</div>
-                  <div className="text-gray-500">{appointment.appointment_time}</div>
+                  <div className="text-gray-500">
+                    {appointment.appointment_time}
+                  </div>
                 </td>
                 <td className="px-6 py-4">${appointment.amount}</td>
                 <td className="px-6 py-4">{appointment.appointment_status}</td>
@@ -146,4 +151,4 @@ function UserAppointments() {
   );
 }
 
-export default UserAppointments;
+export default Appointments;

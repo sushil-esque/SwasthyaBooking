@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAppointments } from "../../api/user";
+import { getDoctors } from "../../../api/user";
 import { useState } from "react";
 
-function UserAppointments() {
+function DoctorList() {
   const { data } = useQuery({
-    queryKey: ["userAppointments"],
-    queryFn: getAppointments,
+    queryKey: ["doctorList"],
+    queryFn: getDoctors,
     retry: 3,
   });
 
@@ -80,55 +80,84 @@ function UserAppointments() {
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_id")}
+                onClick={() => requestSort("id")}
               >
-                Appointment ID
-                <SortArrows columnKey="appointment_id" />
+                ID
+                <SortArrows columnKey="id" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_date")}
+                onClick={() => requestSort("Image")}
               >
-                Appointment Date & Time
-                <SortArrows columnKey="appointment_date" />
+                Image
+                <SortArrows columnKey="Image" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("amount")}
+                onClick={() => requestSort("Name")}
               >
-                Amount
-                <SortArrows columnKey="amount" />
+                Name
+                <SortArrows columnKey="Name" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_status")}
+                onClick={() => requestSort("Email")}
               >
-                Appointment Status
-                <SortArrows columnKey="appointment_status" />
+                Email
+                <SortArrows columnKey="Email" />
               </th>
-              <th scope="col" className="px-6 py-3">
-                <span className="sr-only">Edit</span>
+              <th
+                scope="col"
+                className="px-6 py-3 cursor-pointer"
+                onClick={() => requestSort("Phone")}
+              >
+                Phone
+                <SortArrows columnKey="Phone" />
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 cursor-pointer"
+                onClick={() => requestSort("Speciality")}
+              >
+                Speciality
+                <SortArrows columnKey="Speciality" />
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 cursor-pointer"
+               
+              >
+                Action
               </th>
             </tr>
           </thead>
           <tbody>
-            {finalData?.map((appointment) => (
-              <tr key={appointment.appointment_id} className="bg-white border-b">
+            {finalData?.map((doctors) => (
+              <tr
+                key={doctors.id}
+                className="bg-white border-b"
+              >
                 <th
                   scope="row"
                   className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
                 >
-                  {appointment.appointment_id}
+                  {doctors.id}
                 </th>
                 <td className="px-6 py-4">
-                  <div>{appointment.appointment_date}</div>
-                  <div className="text-gray-500">{appointment.appointment_time}</div>
+                  <div><img src={doctors.Image} alt="" className="w-10 h-10" /></div>
+                 
                 </td>
-                <td className="px-6 py-4">${appointment.amount}</td>
-                <td className="px-6 py-4">{appointment.appointment_status}</td>
+                <td className="px-6 py-4">
+                    {doctors.Name}
+                </td>
+                <td className="px-6 py-4">{doctors.Email}</td>
+                <td className="px-6 py-4">{doctors.Phone}</td>
+                <td className="px-6 py-4">{doctors.Speciality}</td>
+
+
                 <td className="px-6 py-4 text-right">
                   <a
                     href="#"
@@ -146,4 +175,4 @@ function UserAppointments() {
   );
 }
 
-export default UserAppointments;
+export default DoctorList;

@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAppointments } from "../../api/user";
+import { getPatients } from "../../../api/user"; // Ensure you have this API call
 import { useState } from "react";
 
-function UserAppointments() {
+function Patients() {
   const { data } = useQuery({
-    queryKey: ["userAppointments"],
-    queryFn: getAppointments,
+    queryKey: ["patientList"],
+    queryFn: getPatients, // Replace with the correct function to fetch patients
     retry: 3,
   });
 
@@ -13,13 +13,13 @@ function UserAppointments() {
 
   // Sort function
   const sortedData = () => {
-    if (!data) return [];
+    if (!data?.data) return [];
 
-    const sortedArray = [...data];
+    const sortedArray = [...data.data]; // Access the array under `data.data`
     if (sortConfig.key) {
       sortedArray.sort((a, b) => {
-        const valueA = a[sortConfig.key];
-        const valueB = b[sortConfig.key];
+        const valueA = a[sortConfig.key] || a.user[sortConfig.key]; // Handle nested keys
+        const valueB = b[sortConfig.key] || b.user[sortConfig.key];
 
         if (valueA < valueB) return sortConfig.direction === "asc" ? -1 : 1;
         if (valueA > valueB) return sortConfig.direction === "asc" ? 1 : -1;
@@ -42,7 +42,6 @@ function UserAppointments() {
   // Arrow Component
   const SortArrows = ({ columnKey }) => (
     <div className="inline-flex flex-col ml-1">
-      {/* Up Arrow */}
       <svg
         className={`w-3 h-3 ${
           sortConfig.key === columnKey && sortConfig.direction === "asc"
@@ -55,7 +54,6 @@ function UserAppointments() {
       >
         <path d="M5 12l5-5 5 5H5z" />
       </svg>
-      {/* Down Arrow */}
       <svg
         className={`w-3 h-3 ${
           sortConfig.key === columnKey && sortConfig.direction === "desc"
@@ -80,56 +78,47 @@ function UserAppointments() {
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_id")}
+                onClick={() => requestSort("id")}
               >
-                Appointment ID
-                <SortArrows columnKey="appointment_id" />
+                ID
+                <SortArrows columnKey="id" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_date")}
+                onClick={() => requestSort("name")}
               >
-                Appointment Date & Time
-                <SortArrows columnKey="appointment_date" />
+                Name
+                <SortArrows columnKey="name" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("amount")}
+                onClick={() => requestSort("email")}
               >
-                Amount
-                <SortArrows columnKey="amount" />
+                Email
+                <SortArrows columnKey="email" />
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_status")}
+                className="px-6 py-3"
               >
-                Appointment Status
-                <SortArrows columnKey="appointment_status" />
-              </th>
-              <th scope="col" className="px-6 py-3">
-                <span className="sr-only">Edit</span>
+                Action
               </th>
             </tr>
           </thead>
           <tbody>
-            {finalData?.map((appointment) => (
-              <tr key={appointment.appointment_id} className="bg-white border-b">
+            {finalData?.map((patient) => (
+              <tr key={patient.id} className="bg-white border-b">
                 <th
                   scope="row"
                   className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
                 >
-                  {appointment.appointment_id}
+                  {patient.id}
                 </th>
+                <td className="px-6 py-4">{patient.user.name}</td>
+                <td className="px-6 py-4">{patient.user.email}</td>
                 <td className="px-6 py-4">
-                  <div>{appointment.appointment_date}</div>
-                  <div className="text-gray-500">{appointment.appointment_time}</div>
-                </td>
-                <td className="px-6 py-4">${appointment.amount}</td>
-                <td className="px-6 py-4">{appointment.appointment_status}</td>
-                <td className="px-6 py-4 text-right">
                   <a
                     href="#"
                     className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
@@ -146,4 +135,4 @@ function UserAppointments() {
   );
 }
 
-export default UserAppointments;
+export default Patients;

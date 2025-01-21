@@ -14,7 +14,8 @@
     border-radius: 50%;
     border: 2px solid #c5d3f5;
     padding: 2px;
-   
+    object-fit: cover;
+    
     
 }
 .userMenuImageContainer{

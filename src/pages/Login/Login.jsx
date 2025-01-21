@@ -10,11 +10,15 @@ import {
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
+import Loader from "../../components/Loader";
 
 function Login() {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const [passVis, setPassvis] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   async function submit() {
@@ -23,7 +27,8 @@ function Login() {
       password: password,
     };
     try {
-      const rawData = await fetch("http://127.0.0.1:8000/api/login", {
+      setLoading(true);
+      const rawData = await fetch(BASE_URL + "login", {
         method: "Post",
         headers: {
           "Content-Type": "application/json",
@@ -35,7 +40,7 @@ function Login() {
       }
       const data = await rawData.json();
 
-      const { access_token, is_admin, user_id } = data;
+      const { access_token, role, user_id } = data;
       if (access_token) {
         alert("Login successful");
         localStorage.setItem("token", access_token);
@@ -49,21 +54,29 @@ function Login() {
       } else {
         window.alert("Bad credentials");
         console.warn("Access token not found in response");
-       
       }
-      navigate("/");
+
+      // Redirect based on admin status
+      navigate(role === "admin" ? "/adminDashboard" : "/home");
+      window.location.reload();
+      // navigate("/");
       // window.location.reload();
     } catch (error) {
-      
+      window.alert("Bad credentials");
 
-      console.log("error fetching data");
+      console.error("error fetching data", error);
+    }
+    finally {
+      setLoading(false);
     }
   }
   function showpw() {
     setPassvis(!passVis);
   }
   console.log(password);
-
+  if (loading) {
+    return <Loader />;
+  }
   return (
     <div className="loginPageWrapper">
       <div className="loginPage">

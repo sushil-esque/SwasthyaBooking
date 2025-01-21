@@ -9,7 +9,7 @@ function ChangePassword() {
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  // const [data, setData] = useState();
+  const [data, setData] = useState();
 
   async function changePassword() {
     const token = localStorage.getItem("token");
@@ -31,19 +31,25 @@ function ChangePassword() {
           body: JSON.stringify(passwordJson),
         }
       );
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error("Error updating password");
+        // Match the error and details from the response
+        let errorMessage = data.error || "An error occurred.";
+        if (data.details && Array.isArray(data.details)) {
+          errorMessage += "\n" + data.details.join("\n");
+        }
+        alert(errorMessage);
+        return;
       }
 
-      const data = await response.json();
       alert(data.message);
-      // setData(data);
+      setData(data);
       // console.log(data.current_password);
       // alert("Password updated successfully!");
       // Populate state with existing user data
     } catch (error) {
-      console.log("Error updating password", error);
+      console.log(error);
     }
   }
 

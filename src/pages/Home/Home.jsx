@@ -1,8 +1,11 @@
+import FindDoctors from "../FindDoctors";
+import DoctorPage from "../FIndDoctors/DoctorPage";
 import "./home.css";
 import { NavLink } from "react-router-dom";
 
 function Home() {
   return (
+    <>
     <div className="homeMain">
       <div className="desc">
         <p
@@ -35,7 +38,7 @@ function Home() {
           <p>Access Expert Medical Advice Anytime</p>
         </div>
         <NavLink to={"/findDoctors"}>
-        <button>BOOK NOW</button>
+        <button >BOOK NOW</button>
         </NavLink>
       
       </div>
@@ -46,6 +49,8 @@ function Home() {
         />
       </div>
     </div>
+    <DoctorPage/>
+    </>
   );
 }
 

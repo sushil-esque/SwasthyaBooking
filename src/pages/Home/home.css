@@ -12,7 +12,7 @@ letter-spacing: 1px;
     display: flex;
     height: 70vh;
     margin-top: 130px;
-    margin: 60px 0px 30px 200px;
+    margin: 60px 0px 100px 200px;
 }
 .desc button:hover{
     background-color: #ff724a;

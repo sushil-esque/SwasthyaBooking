@@ -14,6 +14,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
 function SignIn() {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const [passVis, setPassvis] = useState(false);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +26,7 @@ function SignIn() {
   const [location, setLocation] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [profileImage, setProfileImage] = useState(null);
+  const patient = "patient";
   const navigate = useNavigate();
   function showpw() {
     setPassvis(!passVis);
@@ -49,8 +52,10 @@ function SignIn() {
     formData.append("phone_number", phone);
     formData.append("gender", gender);
     formData.append("location", location);
+    formData.append("role", patient);
+
     try {
-      const rawData = await fetch("http://127.0.0.1:8000/api/register", {
+      const rawData = await fetch(BASE_URL + "register", {
         method: "Post",
 
         body: formData,
