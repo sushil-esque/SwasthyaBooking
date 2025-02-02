@@ -24,21 +24,48 @@ import ChangePassword from "./pages/User/ChangePassword";
 import UserLayout from "./components/UserLayout";
 import AdminDashboard from "./pages/Admin/DashBoard/AdminDashboard";
 import AdminHome from "./pages/Admin/AdminPages/AdminHome";
-import Appointments from "./pages/Admin/AdminPages/Appointments";
+import Appointments from "./pages/Doctor/DoctorPages/DoctorAppointments";
 import AddDoctor from "./pages/Admin/AdminPages/AddDoctor";
 import DoctorList from "./pages/Admin/AdminPages/DoctorList";
 import Patients from "./pages/Admin/AdminPages/Patients";
+import DoctorDashboard from "./pages/Doctor/DashBoard/DoctorDashboard";
+import DoctorHome from "./pages/Doctor/DoctorPages/DoctorHome";
+import DoctorAppointments from "./pages/Doctor/DoctorPages/DoctorAppointments";
+import UpdateProfile from "./pages/Doctor/DoctorPages/UpdateProfile";
+import Schedule from "./pages/Doctor/DoctorPages/Schedule";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
-      <Route path="/adminDashboard" element={<Protected><AdminDashboard /></Protected>}>
+      <Route
+        path="/adminDashboard"
+        element={
+          <Protected>
+            <AdminDashboard />
+          </Protected>
+        }
+      >
         <Route index element={<AdminHome />} />
         <Route path="dashboard" element={<AdminHome />} />
         <Route path="appointments" element={<Appointments />} />
-        <Route path="addDoctors" element={<AddDoctor/>} />
-        <Route path="doctorList" element={<DoctorList/>} />
-        <Route path="patients"  element={<Patients/>} />
+        <Route path="addDoctors" element={<AddDoctor />} />
+        <Route path="doctorList" element={<DoctorList />} />
+        <Route path="patients" element={<Patients />} />
+      </Route>
+      <Route
+        path="/doctorDashboard"
+        element={
+          <Protected>
+            <DoctorDashboard />
+          </Protected>
+        }
+      >
+        <Route index element={<DoctorHome />} />
+        <Route path="dashboard" element={<DoctorHome />} />
+        <Route path="appointments" element={<DoctorAppointments />} />
+        <Route path="updateProfile" element={<UpdateProfile/>}/>
+        <Route path="schedule" element={<Schedule/>} />
+        <Route path="changePassword" element={<ChangePassword/>}/>
       </Route>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />

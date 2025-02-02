@@ -58,6 +58,8 @@ function Login() {
 
       // Redirect based on admin status
       navigate(role === "admin" ? "/adminDashboard" : "/home");
+      navigate(role === "doctor" ? "/doctorDashboard" : "/home");
+
       window.location.reload();
       // navigate("/");
       // window.location.reload();

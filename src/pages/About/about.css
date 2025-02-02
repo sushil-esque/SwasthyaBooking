@@ -9,6 +9,7 @@
 }
 .image {
   width: 50%;
+  height: 1300px; /* Set a fixed height */
 }
 .welcomeBox {
   background-color: #ea6309;

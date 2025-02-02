@@ -50,6 +50,7 @@ function ProfileSettings() {
       }
 
       const data = await response.json();
+      console.log(data.gender)
       setData(data);
       // Populate state with existing user data
       setName(data.name);

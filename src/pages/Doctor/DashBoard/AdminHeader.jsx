@@ -12,7 +12,7 @@ function AdminHeader({toggleSidebar}) {
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove token
     navigate("/login"); // Redirect to login page
-  };
+  }
   return (
     <header className="header" >
       <div className="menu-icon">
@@ -26,6 +26,7 @@ function AdminHeader({toggleSidebar}) {
         <BsFillEnvelopeFill className="icon" />
         <BsPersonCircle className="icon" />
         <button onClick={handleLogout} className="text-[#ff724a] border-emerald-50 rounded-md hover:bg-emerald-50">Logout</button>
+
       </div>
     </header>
   );

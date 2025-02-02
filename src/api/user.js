@@ -15,10 +15,14 @@ async function getDoctors() {
 async function getPatients() {
   return await axiosWithAuth.get(`${BASE_URL}patients`);
 }
+async function getMe() {
+  return await axiosWithAuth.get(`${BASE_URL}me`);
+}
+
+export { getMe };
 
 export { getPatients };
 
 export { getDoctors };
 
 export { getAppointments };
-

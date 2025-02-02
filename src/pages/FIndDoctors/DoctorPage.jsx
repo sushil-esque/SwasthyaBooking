@@ -16,6 +16,7 @@ function DoctorPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [speciality, setSpeciality] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // State for search input
   async function fetchDoctors() {
     try {
       setLoading(true);
@@ -38,82 +39,115 @@ function DoctorPage() {
     fetchDoctors();
   }, []);
 
-    // Filter doctors based on selected speciality
-    const filteredDoctors = speciality
-    ? data.filter((doctor) => doctor.Speciality === speciality)
-    : data;
+  // Filter doctors based on selected speciality
+  // const filteredDoctors = speciality
+  //   ? data.filter((doctor) => doctor.Speciality === speciality)
+  //   : data;
 
-  const docInfo = filteredDoctors.map((doctor, index) => (
-    <NavLink to={`${doctor.id}`} key={index} className="docCard">
-      <div key={index}>
-        {/* <h3>Dr. {doctor.Name}</h3> */}
-        <div className="docImage">
-          <img src={doctor.Image} alt="" />
-        </div>
-        <div
-          style={{
-            color: "#b3b3b3",
-            textTransform: "uppercase",
-            fontWeight: "700",
-            letterSpacing: "1px",
-          }}
-        >
-          {doctor.Speciality}
-        </div>
-        <div className="doctorName">Dr. {doctor.Name}</div>
+  // const docInfo = filteredDoctors.map((doctor, index) => (
+  //   <NavLink to={`${doctor.id}`} key={index} className="docCard">
+  //     <div key={index}>
+  //       {/* <h3>Dr. {doctor.Name}</h3> */}
+  //       <div className="docImage">
+  //         <img src={doctor.Image} alt="" />
+  //       </div>
+  //       <div
+  //         style={{
+  //           color: "#b3b3b3",
+  //           textTransform: "uppercase",
+  //           fontWeight: "700",
+  //           letterSpacing: "1px",
+  //         }}
+  //       >
+  //         {doctor.Speciality}
+  //       </div>
+  //       <div className="doctorName">Dr. {doctor.Name}</div>
 
-        <div className="docDesc">
-          <FaLocationDot className="text-2xl" /> <span>{doctor.Location}</span>
-        </div>
-        <div className="socials">
-          <FontAwesomeIcon icon={faInstagramSquare} />
-          <FontAwesomeIcon icon={faFacebook} />
-          <FontAwesomeIcon icon={faTwitter} />
-        </div>
-      </div>
-    </NavLink>
-  ));
+  //       <div className="docDesc">
+  //         <FaLocationDot className="text-2xl" /> <span>{doctor.Location}</span>
+  //       </div>
+  //       <div className="socials">
+  //         <FontAwesomeIcon icon={faInstagramSquare} />
+  //         <FontAwesomeIcon icon={faFacebook} />
+  //         <FontAwesomeIcon icon={faTwitter} />
+  //       </div>
+  //     </div>
+  //   </NavLink>
+  // ));
+    // Filter doctors based on search term and selected specialty
+    const filteredDoctors = data.filter((doctor) => {
+      const matchesSpeciality = speciality ? doctor.Speciality === speciality : true;
+      const matchesSearch =
+        searchTerm === "" ||
+        doctor.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.Location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.Speciality.toLowerCase().includes(searchTerm.toLowerCase());
+  
+      return matchesSpeciality && matchesSearch;
+    });
   if (loading) {
     return <Loader />;
   }
   return (
     <div className="doctorPageBody">
       <div className="flex items-center justify-center gap-4 mb-10">
-      <div className="searchBar">
-        <input
-          type="text"
-          placeholder="Doctors, conditions, or procedures..."
-        />
-        <FontAwesomeIcon icon={faMagnifyingGlass} />
-        
-      </div>
-      <div >
-        <div className="">
-          <select
-          className="mt-20 h-8 bg-white rounded-xl border-hidden"
-            value={speciality}
-            onChange={(e) => {
-              console.log(e.target.value);
-              setSpeciality(e.target.value);
-            }}
-          >
-            <option value="">All Specialities</option>
-            <option value="Cardiology">Cardiology</option>
-            <option value="Neurology">Neurology</option>
-            <option value="Pediatrics">Pediatrics</option>
-            <option value="Dermatology">Dermatology</option>
-            <option value="Gynecology">Gynaecology</option>
-
-          </select>
+        <div className="searchBar">
+          <input
+            type="text"
+            placeholder="Search by name, location, or specialty..."  
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}       />
+          <FontAwesomeIcon icon={faMagnifyingGlass} />
         </div>
-      </div>
+        <div>
+          <div className="">
+            <select
+              className="mt-20 h-8 bg-white rounded-xl border-hidden"
+              value={speciality}
+              onChange={(e) => {
+                console.log(e.target.value);
+                setSpeciality(e.target.value);
+              }}
+            >
+              <option value="">All Specialities</option>
+              <option value="Cardiology">Cardiology</option>
+              <option value="Neurology">Neurology</option>
+              <option value="Pediatrics">Pediatrics</option>
+              <option value="Dermatology">Dermatology</option>
+              <option value="Gynecology">Gynaecology</option>
+            </select>
+          </div>
+        </div>
       </div>
       {/* <div className="title">
         <h1>The best doctors of Nepal</h1>
       </div> */}
-      
 
-      <div className="cardContainer">{docInfo}</div>
+      <div className="cardContainer">
+      {filteredDoctors.length > 0 ? (
+          filteredDoctors.map((doctor, index) => (
+            <NavLink to={`${doctor.id}`} key={index} className="docCard">
+              <div>
+                <div className="docImage">
+                  <img src={doctor.Image} alt="" />
+                </div>
+                <div className="docSpeciality">{doctor.Speciality}</div>
+                <div className="doctorName">Dr. {doctor.Name}</div>
+                <div className="docDesc">
+                  <FaLocationDot className="text-2xl" /> <span>{doctor.Location}</span>
+                </div>
+                <div className="socials">
+                  <FontAwesomeIcon icon={faInstagramSquare} />
+                  <FontAwesomeIcon icon={faFacebook} />
+                  <FontAwesomeIcon icon={faTwitter} />
+                </div>
+              </div>
+            </NavLink>
+          ))
+        ) : (
+          <p className="no-results">No doctors found.</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -50,10 +50,10 @@ function DocProfile() {
     return <div>Loading...</div>;
   }
   const selectedDate = watch("selectedDate");
-  return (
+return (
     <>
       <div style={{}}>
-        <div className="docProfileBody" style={{}}>
+        <div className="docProfileBody" >
           <div
             style={{
               display: "flex",

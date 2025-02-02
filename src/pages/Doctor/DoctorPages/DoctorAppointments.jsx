@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getAppointments } from "../../../api/user";
 import { useState } from "react";
 
-function Appointments() {
+function DoctorAppointments() {
   const { data } = useQuery({
     queryKey: ["userAppointments"],
     queryFn: getAppointments,
@@ -151,4 +151,4 @@ function Appointments() {
   );
 }
 
-export default Appointments;
+export default DoctorAppointments;

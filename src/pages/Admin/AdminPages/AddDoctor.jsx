@@ -9,11 +9,10 @@ function AddDoctor() {
 
   const [formValues, setFormValues] = useState({
     name: "",
-    speciality: "",
+    specialization: "",
     experience: "",
-    fee: "",
+    default_price: "",
     bio: "",
-    about: "",
     email: "",
     password: "",
     password_confirmation: "",
@@ -26,6 +25,8 @@ function AddDoctor() {
   });
 
   const [passVis, setPassVis] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState([]);
 
   const togglePasswordVisibility = () => {
     setPassVis(!passVis);
@@ -48,21 +49,45 @@ function AddDoctor() {
     });
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/createDoctor", {
+      const response = await fetch("http://127.0.0.1:8000/api/doctors", {
         method: "POST",
         body: formData,
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-
+      const responseData = await response.json(); // Parse response as JSON
+      console.log(response);
       if (!response.ok) {
-        throw new Error("Registration failed!");
+        if (response.status === 422) {
+          console.log(responseData.message);
+          setErrorMessage(responseData.message);
+          setIsError(true);
+        }
+        throw new Error(responseData.message || "Registration failed!");
       }
+      console.log("Registration successful:", responseData);
+      alert("Doctor registered successfully!");
+       // Reset form
+    setFormValues({
+      name: "",
+      specialization: "",
+      experience: "",
+      default_price: "",
+      bio: "",
+      email: "",
+      password: "",
+      password_confirmation: "",
+      image: "",
+      gender: "",
+      date_of_birth: "",
+      phone_number: "",
+      location: "",
+      role: "doctor",
 
-      const data = await response.json();
-      console.log("Registration successful:", data);
-      alert("User registered successfully!");
+        // Reset error state
+    
+    });
     } catch (error) {
       console.error("Error submitting form:", error.message);
       alert("Error registering user. Please try again.");
@@ -74,10 +99,20 @@ function AddDoctor() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          console.log(formValues.default_price);
           submit();
         }}
         className="flex flex-wrap gap-5"
       >
+        {isError && (
+          <span className="text-red-500 text-sm">
+            {Object.values(errorMessage)
+              .flat()
+              .map((error, index) => (
+                <div key={index}>{error}</div>
+              ))}
+          </span>
+        )}
         {/* Profile Picture */}
         <div className="w-full flex flex-col gap-3">
           <div className="flex items-center justify-center h-28 w-28 border-4 border-black rounded-full bg-gray-100">
@@ -162,11 +197,11 @@ function AddDoctor() {
           <label htmlFor="speciality">Specialty</label>
           <input
             type="text"
-            name="speciality"
+            name="specialization"
             id="speciality"
             placeholder="Enter specialty"
             className={inputFields}
-            value={formValues.speciality}
+            value={formValues.specialization}
             onChange={handleInputChange}
           />
         </div>
@@ -190,11 +225,11 @@ function AddDoctor() {
           <label htmlFor="fee">Appointment Fee</label>
           <input
             type="number"
-            name="fee"
+            name="default_price"
             id="fee"
             placeholder="Enter fee"
             className={inputFields}
-            value={formValues.fee}
+            value={formValues.default_price}
             onChange={handleInputChange}
           />
         </div>
@@ -227,7 +262,7 @@ function AddDoctor() {
         </div>
 
         {/* About */}
-        <div className={fields}>
+        {/* <div className={fields}>
           <label htmlFor="about">About</label>
           <textarea
             name="about"
@@ -237,7 +272,7 @@ function AddDoctor() {
             value={formValues.about}
             onChange={handleInputChange}
           ></textarea>
-        </div>
+        </div> */}
 
         {/* Email */}
         <div className={fields}>
