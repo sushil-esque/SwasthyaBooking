@@ -33,6 +33,8 @@ import DoctorHome from "./pages/Doctor/DoctorPages/DoctorHome";
 import DoctorAppointments from "./pages/Doctor/DoctorPages/DoctorAppointments";
 import UpdateProfile from "./pages/Doctor/DoctorPages/UpdateProfile";
 import Schedule from "./pages/Doctor/DoctorPages/Schedule";
+import RecomendedDoctors from "./pages/Recommended/RecomendedDoctors";
+import { Toaster } from "./components/ui/toaster";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -74,7 +76,7 @@ const router = createBrowserRouter(
         <Route path="findDoctors" element={<DoctorPage />} />
         <Route path="finddoc" element={<FindDoctors />} />
         <Route path="findDoctors/:id" element={<DocProfile />} />
-
+        <Route path="recommendedDoctors" element={<RecomendedDoctors/>} />
         <Route path="healthPackages" element={<HealthPackages />} />
         <Route path="login" element={<Login />} />
         <Route path="signin" element={<SignIn />} />
@@ -102,6 +104,7 @@ const router = createBrowserRouter(
 function App() {
   return (
     <>
+    <Toaster />
       <RouterProvider router={router} />
     </>
   );

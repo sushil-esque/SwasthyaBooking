@@ -7,6 +7,9 @@ const FAKE_BASE_URL =
 async function getAppointments() {
   return await basicAxios.get(`${FAKE_BASE_URL}appointments`);
 }
+async function acceptAppointments() {
+  return await axiosWithAuth.patch(`${FAKE_BASE_URL}appointments`);
+}
 
 async function getDoctors() {
   return await basicAxios.get(`${FAKE_BASE_URL}Doctors`);
@@ -26,3 +29,5 @@ export { getPatients };
 export { getDoctors };
 
 export { getAppointments };
+
+export { acceptAppointments };

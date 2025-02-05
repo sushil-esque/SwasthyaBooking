@@ -1,47 +1,111 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Signin.css";
-import { json, NavLink, useNavigate } from "react-router-dom";
-
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   faUser,
   faLock,
   faEyeSlash,
   faEye,
-  faMailBulk,
   faEnvelope,
   faPhone,
   faMap,
 } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+
 function SignIn() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const [passVis, setPassvis] = useState(false);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [email, setemail] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [gender, setGender] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState(null); // Stores coordinates
+  const [locationName, setLocationName] = useState(""); // Stores location name
+  const [searchQuery, setSearchQuery] = useState(""); // Stores search input
+  const [searchResults, setSearchResults] = useState([]); // Stores search results
+
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [profileImage, setProfileImage] = useState(null);
   const patient = "patient";
   const navigate = useNavigate();
+
+  // Toggle password visibility
   function showpw() {
     setPassvis(!passVis);
   }
-  async function submit() {
-    // const singinJson = {
-    //   name: name,
-    //   email: email,
-    //   password: password,
-    //   date_of_birth: birthDate,
-    //   image: profileImage,
-    //   phone_number: phone,
-    //   gender: gender,
-    //   location: location,
-    // };
+
+  // Fetch location name (Reverse Geocoding)
+  const fetchLocationName = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+      );
+      const data = await response.json();
+      if (data.display_name) {
+        setLocationName(data.display_name);
+        setSearchQuery(data.display_name); // Update searchQuery with the location name
+      }
+    } catch (error) {
+      console.error("Error fetching location name:", error);
+    }
+  };
+  
+  // Fetch search results (Forward Geocoding)
+  const handleSearch = async (e) => {
+    setSearchQuery(e.target.value);
+    if (e.target.value.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${e.target.value}`
+      );
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+    }
+  };
+
+  // Handle search selection
+  const handleSearchSelect = (lat, lon, name) => {
+    setLocation({ lat: parseFloat(lat), lng: parseFloat(lon) });
+    setLocationName(name);
+    setSearchQuery(name);
+    setSearchResults([]);
+  };
+
+  // Handle user clicking on the map
+  function LocationMarker() {
+    useMapEvents({
+      click(e) {
+        const { lat, lng } = e.latlng;
+        setLocation({ lat, lng });
+        fetchLocationName(lat, lng);
+      },
+    });
+
+    return location ? (
+      <Marker position={[location.lat, location.lng]}>
+        <Popup>{locationName || "Your selected location"}</Popup>
+      </Marker>
+    ) : null;
+  }
+
+  // Handle form submission
+  const submit = async () => {
+    if (!location) {
+      alert("Please select a location on the map.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("email", email);
@@ -51,38 +115,32 @@ function SignIn() {
     formData.append("image", profileImage);
     formData.append("phone_number", phone);
     formData.append("gender", gender);
-    formData.append("location", location);
+    formData.append("location", locationName); // Use location name
+    formData.append("latitude", location.lat); // Add latitude
+    formData.append("longitude", location.lng); // Add longitude
     formData.append("role", patient);
 
     try {
       const rawData = await fetch(BASE_URL + "register", {
-        method: "Post",
-
+        method: "POST",
         body: formData,
       });
       if (!rawData.ok) {
-        throw new Error("Login Failed!!!");
+        throw new Error("Registration Failed!!!");
       }
       const data = await rawData.json();
       console.log("Registration successful:", data);
       alert("User registered successfully!");
       navigate("/login");
     } catch (error) {
-      console.log("error fetching data");
-      // } finally {
-      //   window.alert("created acccount successfully");
-      // }
-    }
-  }
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      console.log("Enter key was pressed, but form submission is prevented.");
+      console.error("Error registering user:", error);
+      console.log(formData);
+
     }
   };
-  console.log(password);
-  console.log(name);
+
   return (
+     
     <div className="signinWrapper">
       <div className="siginPage">
         <div>
@@ -93,8 +151,8 @@ function SignIn() {
             e.preventDefault();
             submit();
           }}
-          onKeyDown={handleKeyDown}
         >
+          {/* Name */}
           <div className="userName">
             <label htmlFor="username">Name</label>
             <div className="user">
@@ -102,33 +160,33 @@ function SignIn() {
               <input
                 type="text"
                 value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                }}
-                htmlFor="username"
+                onChange={(e) => setName(e.target.value)}
                 id="username"
                 placeholder="Create a username"
+                required
               />
             </div>
             <hr />
           </div>
+
+          {/* Email */}
           <div className="userName">
             <label htmlFor="email">Email</label>
             <div className="user">
               <FontAwesomeIcon icon={faEnvelope} />
               <input
-                type="text"
+                type="email"
                 value={email}
-                onChange={(e) => {
-                  setemail(e.target.value);
-                }}
-                htmlFor="Email"
-                id="Email"
+                onChange={(e) => setEmail(e.target.value)}
+                id="email"
                 placeholder="Enter your email"
+                required
               />
             </div>
             <hr />
           </div>
+
+          {/* Phone Number */}
           <div className="userName">
             <label htmlFor="phone">Phone number</label>
             <div className="user">
@@ -136,16 +194,16 @@ function SignIn() {
               <input
                 type="number"
                 value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value);
-                }}
-                htmlFor="Email"
-                id="Email"
+                onChange={(e) => setPhone(e.target.value)}
+                id="phone"
                 placeholder="Enter your phone no."
+                required
               />
             </div>
             <hr />
           </div>
+
+          {/* Date of Birth */}
           <div className="userName">
             <label htmlFor="birthDate">Date of birth</label>
             <div className="user">
@@ -153,16 +211,15 @@ function SignIn() {
               <input
                 type="date"
                 value={birthDate}
-                onChange={(e) => {
-                  setBirthDate(e.target.value);
-                }}
-                htmlFor="Email"
-                id="Email"
-                placeholder="Enter your email"
+                onChange={(e) => setBirthDate(e.target.value)}
+                id="birthDate"
+                required
               />
             </div>
             <hr />
           </div>
+
+          {/* Gender */}
           <div className="userName">
             <label htmlFor="gender">Gender</label>
             <div className="gender-options">
@@ -199,21 +256,8 @@ function SignIn() {
             </div>
             <hr />
           </div>
-          <div className="userName">
-            <label htmlFor="location">Location</label>
-            <div className="user">
-              <FontAwesomeIcon icon={faMap} />
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                id="location"
-                placeholder="Enter your location"
-              />
-            </div>
-            <hr />
-          </div>
 
+          {/* Password */}
           <div className="Password">
             <label htmlFor="password">Password</label>
             <div className="user">
@@ -221,24 +265,19 @@ function SignIn() {
               <input
                 type={passVis ? "text" : "password"}
                 value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                }}
-                htmlFor="password"
+                onChange={(e) => setPassword(e.target.value)}
                 id="password"
                 placeholder="Create a password"
+                required
               />
               <button onClick={showpw} type="button">
-                {" "}
-                {passVis ? (
-                  <FontAwesomeIcon icon={faEye} />
-                ) : (
-                  <FontAwesomeIcon icon={faEyeSlash} />
-                )}
+                {passVis ? <FontAwesomeIcon icon={faEye} /> : <FontAwesomeIcon icon={faEyeSlash} />}
               </button>
             </div>
             <hr />
           </div>
+
+          {/* Confirm Password */}
           <div className="Password">
             <label htmlFor="password_confirmation">Confirm Password</label>
             <div className="user">
@@ -246,24 +285,19 @@ function SignIn() {
               <input
                 type={passVis ? "text" : "password"}
                 value={passwordConfirmation}
-                onChange={(e) => {
-                  setPasswordConfirmation(e.target.value);
-                }}
-                htmlFor="password_confirmation"
+                onChange={(e) => setPasswordConfirmation(e.target.value)}
                 id="password_confirmation"
                 placeholder="Confirm your password"
+                required
               />
               <button onClick={showpw} type="button">
-                {" "}
-                {passVis ? (
-                  <FontAwesomeIcon icon={faEye} />
-                ) : (
-                  <FontAwesomeIcon icon={faEyeSlash} />
-                )}
+                {passVis ? <FontAwesomeIcon icon={faEye} /> : <FontAwesomeIcon icon={faEyeSlash} />}
               </button>
             </div>
             <hr />
           </div>
+
+          {/* Profile Picture */}
           <div className="userName">
             <label htmlFor="profilePic">Profile picture</label>
             <div className="user">
@@ -275,35 +309,60 @@ function SignIn() {
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file) {
-                    // const reader = new FileReader();
-                    // reader.onload = () => setProfileImage(reader.result); // Convert file to a data URL
-                    // reader.readAsDataURL(file);
                     setProfileImage(file);
                   }
                 }}
+                required
               />
-              {profileImage && (
-                <div className="imagePreview">
-                  <img
-                    src={profileImage}
-                    alt="Profile Preview"
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      borderRadius: "50%",
-                    }}
-                  />
-                </div>
-              )}
             </div>
             <hr />
           </div>
 
+          {/* Location Search and Map */}
+          <div className="userName">
+            <label htmlFor="location">Location</label>
+            <div className="user">
+              <FontAwesomeIcon icon={faMap} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearch}
+                id="location"
+                placeholder="Search for a location..."
+              />
+             
+            </div>
+            {searchResults.length > 0 && (
+                <ul style={{ listStyle: "none", padding: 0, border: "1px solid #ccc" }}>
+                  {searchResults.map((result, index) => (
+                    <li
+                      key={index}
+                      style={{ padding: "5px", cursor: "pointer", borderBottom: "1px solid #ddd" }}
+                      onClick={() => handleSearchSelect(result.lat, result.lon, result.display_name)}
+                    >
+                      {result.display_name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            <hr />
+          </div>
+
+          {/* Map Container */}
+          <div style={{ height: "300px", width: "100%", marginBottom: "20px" }}>
+            <MapContainer center={[27.7172, 85.324]} zoom={13} style={{ height: "100%", width: "100%" }}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <LocationMarker />
+            </MapContainer>
+          </div>
+
+          {/* Submit Button */}
           <div className="btn">
-            <button type="submit"> Create account</button>
+            <button type="submit">Create account</button>
           </div>
         </form>
 
+        {/* Link to Login Page */}
         <div className="toLogin">
           Already have an account?{" "}
           <b>

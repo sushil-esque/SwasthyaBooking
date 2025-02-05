@@ -11,9 +11,9 @@ function UpdateProfile() {
     formState: { errors },
   } = useForm();
 
-  const [timeSlots, setTimeSlots] = useState([""]); // Initialize with one empty slot
   const [profilePic, setProfilePic] = useState(null); // State for the selected profile picture file
   const [profilePicUrl, setProfilePicUrl] = useState(""); // State for the profile picture URL
+  const [availability, setAvailability] = useState([]); // State for availability data
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["fetchDocProfile"],
@@ -27,25 +27,10 @@ function UpdateProfile() {
       setProfilePicUrl(data.image_url);
     }
     if (data?.availability) {
-      // Assuming availability is an array of time slots
-      setTimeSlots(data.availability);
+      // Set the availability data from the API response
+      setAvailability(data.availability);
     }
   }, [data]);
-
-  const addTimeSlot = () => {
-    setTimeSlots([...timeSlots, ""]); // Add an empty time slot
-  };
-
-  const removeTimeSlot = (index) => {
-    const updatedSlots = timeSlots.filter((_, i) => i !== index);
-    setTimeSlots(updatedSlots);
-  };
-
-  const handleTimeSlotChange = (index, value) => {
-    const updatedSlots = [...timeSlots];
-    updatedSlots[index] = value;
-    setTimeSlots(updatedSlots);
-  };
 
   const handleProfilePicChange = (e) => {
     const file = e.target.files[0];
@@ -55,10 +40,46 @@ function UpdateProfile() {
     }
   };
 
+  const addAvailability = () => {
+    // Add a new availability object with an empty date and times array
+    setAvailability([...availability, { date: "", times: [""] }]);
+  };
+
+  const removeAvailability = (index) => {
+    const updatedAvailability = availability.filter((_, i) => i !== index);
+    setAvailability(updatedAvailability);
+  };
+
+  const handleDateChange = (index, value) => {
+    const updatedAvailability = [...availability];
+    updatedAvailability[index].date = value;
+    setAvailability(updatedAvailability);
+  };
+
+  const handleTimeChange = (availabilityIndex, timeIndex, value) => {
+    const updatedAvailability = [...availability];
+    updatedAvailability[availabilityIndex].times[timeIndex] = value;
+    setAvailability(updatedAvailability);
+  };
+
+  const addTimeSlot = (availabilityIndex) => {
+    const updatedAvailability = [...availability];
+    updatedAvailability[availabilityIndex].times.push("");
+    setAvailability(updatedAvailability);
+  };
+
+  const removeTimeSlot = (availabilityIndex, timeIndex) => {
+    const updatedAvailability = [...availability];
+    updatedAvailability[availabilityIndex].times = updatedAvailability[
+      availabilityIndex
+    ].times.filter((_, i) => i !== timeIndex);
+    setAvailability(updatedAvailability);
+  };
+
   const onSubmit = (formData) => {
     const updatedData = {
       ...formData,
-      availability: timeSlots, // Send the time slots to the backend
+      availability, // Send the availability data to the backend
       profile_picture: profilePic, // Send the selected profile picture file
     };
     console.log(updatedData); // Send this data to your backend
@@ -85,7 +106,11 @@ function UpdateProfile() {
                   <div>
                     {/* Profile Picture */}
                     <img
-                      src={profilePicUrl || data?.image_url || "https://i.pravatar.cc/300"} // Use the current profile picture URL or a fallback
+                      src={
+                        profilePicUrl ||
+                        data?.image_url ||
+                        "https://i.pravatar.cc/300"
+                      } // Use the current profile picture URL or a fallback
                       alt="Profile Picture"
                       className="rounded-full w-32 h-32 mx-auto border-4 border-indigo-800 mb-4 transition-transform duration-300 hover:scale-105 ring ring-gray-300"
                     />
@@ -229,39 +254,85 @@ function UpdateProfile() {
                   </div>
                 </div>
 
-                {/* Time Slots */}
+                {/* Availability */}
                 <div className="space-y-4">
                   <label className="block text-sm font-medium text-gray-700">
-                    Time Slots
+                    Availability
                   </label>
-                  {timeSlots.map((slot, index) => (
-                    <div key={index} className="flex flex-wrap gap-4 items-end">
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          value={slot}
-                          onChange={(e) =>
-                            handleTimeSlotChange(index, e.target.value)
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                          placeholder="Enter time slot (e.g., 10:00 AM)"
-                        />
+                  {availability.map((availabilityItem, availabilityIndex) => (
+                    <div key={availabilityIndex} className="space-y-4">
+                      <div className="flex flex-wrap gap-4 items-end">
+                        <div className="flex-1">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Date
+                          </label>
+                          <input
+                            type="date"
+                            value={availabilityItem.date}
+                            onChange={(e) =>
+                              handleDateChange(availabilityIndex, e.target.value)
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeAvailability(availabilityIndex)}
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        >
+                          Remove Availability
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeTimeSlot(index)}
-                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                      >
-                        Remove
-                      </button>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Time Slots
+                        </label>
+                        {availabilityItem.times.map((time, timeIndex) => (
+                          <div
+                            key={timeIndex}
+                            className="flex flex-wrap gap-4 items-end"
+                          >
+                            <div className="flex-1">
+                              <input
+                                type="time"
+                                value={time}
+                                onChange={(e) =>
+                                  handleTimeChange(
+                                    availabilityIndex,
+                                    timeIndex,
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removeTimeSlot(availabilityIndex, timeIndex)
+                              }
+                              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                            >
+                              Remove Time
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => addTimeSlot(availabilityIndex)}
+                          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                        >
+                          Add Time Slot
+                        </button>
+                      </div>
                     </div>
                   ))}
                   <button
                     type="button"
-                    onClick={addTimeSlot}
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                    onClick={addAvailability}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                   >
-                    Add Time Slot
+                    Add Availability
                   </button>
                 </div>
 

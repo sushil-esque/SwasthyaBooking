@@ -7,6 +7,9 @@
     align-items: center;
     flex-direction: column;
     gap: 5px;
+    position:sticky;
+    top: 80px;
+    background-color: white;
 }
 .userMenu img{
     width: 100px;

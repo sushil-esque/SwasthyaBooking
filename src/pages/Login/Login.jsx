@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
 import Loader from "../../components/Loader";
+import { toast } from "@/hooks/use-toast";
 
 function Login() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -42,8 +43,13 @@ function Login() {
 
       const { access_token, role, user_id } = data;
       if (access_token) {
-        alert("Login successful");
+        // alert("Login successful");
+        toast({
+          title: "Login successful",
+          description: "You have logged in successfully",
+        });
         localStorage.setItem("token", access_token);
+        console.log("role:", role);
 
         if (user_id) {
           localStorage.setItem("user_id", user_id);
@@ -52,23 +58,35 @@ function Login() {
           console.warn("User ID not found in response");
         }
       } else {
-        window.alert("Bad credentials");
+        // window.alert("Bad credentials");
+        toast({
+          title: "Bad credentials",
+          description: "credentials don't match",
+        });
         console.warn("Access token not found in response");
       }
 
       // Redirect based on admin status
-      navigate(role === "admin" ? "/adminDashboard" : "/home");
-      navigate(role === "doctor" ? "/doctorDashboard" : "/home");
+      if (role === "admin") {
+        navigate("/adminDashboard");
+      } else if (role === "doctor") {
+        navigate("/doctorDashboard");
+      } else {
+        navigate("/home");
+      }
 
-      window.location.reload();
+      // window.location.reload();
       // navigate("/");
       // window.location.reload();
     } catch (error) {
-      window.alert("Bad credentials");
+      // window.alert("Bad credentials");
+      toast({
+        title: "Error logging in ",
+        variant: "destructive",
+      });
 
       console.error("error fetching data", error);
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   }

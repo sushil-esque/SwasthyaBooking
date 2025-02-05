@@ -126,7 +126,7 @@ function DoctorPage() {
       <div className="cardContainer">
       {filteredDoctors.length > 0 ? (
           filteredDoctors.map((doctor, index) => (
-            <NavLink to={`${doctor.id}`} key={index} className="docCard">
+            <NavLink to={`/findDoctors/${doctor.id}`} key={index} className="docCard">
               <div>
                 <div className="docImage">
                   <img src={doctor.Image} alt="" />

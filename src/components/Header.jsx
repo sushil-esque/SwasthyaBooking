@@ -1,3 +1,4 @@
+import { toast } from "@/hooks/use-toast";
 import {
   faChevronDown,
   faCircleChevronDown,
@@ -6,6 +7,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
+import { FaBell } from "react-icons/fa6";
 import { NavLink, useNavigate } from "react-router-dom";
 function Header() {
   const navigate = useNavigate();
@@ -14,8 +16,13 @@ function Header() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    window.alert("You are logged out");
-    window.location.reload();
+    // window.alert("You are logged out");
+    // window.location.reload();
+
+    toast({
+      title: "You are logged out",
+      description: "You have logged out successfully",
+    })
   };
 
   return (
@@ -35,13 +42,20 @@ function Header() {
             <li>
               <NavLink to={"/findDoctors"}>Find Doctor</NavLink>
             </li>
-            <li>
+            {/* <li>
               <NavLink to={"/healthPackages"}>Health Packages</NavLink>
-            </li>
+            </li> */}
             <li>
               <NavLink to={"/about"}>About</NavLink>
             </li>
+            {token && (
+              <li>
+                <NavLink to={"/recommendedDoctors"}>Recommended Doctors</NavLink>
+              </li>
+            )}
+         
           </ul>
+
 
           {token ? (
             //   <li onClick={handleLogout} >
@@ -82,6 +96,11 @@ function Header() {
                                 <button className="signin">Sign In</button>
                             </NavLink>
                         </li> */}
+                        {token &&(
+                          <FaBell />
+                        )
+                        
+                        }
         </nav>
       </div>
     </div>
