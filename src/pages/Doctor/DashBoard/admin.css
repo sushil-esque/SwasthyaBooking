@@ -141,12 +141,10 @@
   padding: 20px 20px 20px 20px;
   font-weight: 600;
 }
-.sidebar-list-item a:active,
-.sidebar-list-item a:focus {
+.sidebar-list-item a.active {
   color: #1f8ced;
 }
-.collapsed-sidebar-list-item a:active,
-.collapsed-sidebar-list-item a:focus {
+.collapsed-sidebar-list-item a.active {
   color: #1f8ced;
 }
 

@@ -3,6 +3,9 @@ import { useForm } from "react-hook-form";
 import { getMe } from "../../../api/user";
 import Loader from "../../../components/Loader";
 import { useEffect, useState } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMap } from "@fortawesome/free-solid-svg-icons";
 
 function UpdateProfile() {
   const {
@@ -14,6 +17,10 @@ function UpdateProfile() {
   const [profilePic, setProfilePic] = useState(null); // State for the selected profile picture file
   const [profilePicUrl, setProfilePicUrl] = useState(""); // State for the profile picture URL
   const [availability, setAvailability] = useState([]); // State for availability data
+  const [location, setLocation] = useState(null); // Stores coordinates
+  const [locationName, setLocationName] = useState(""); // Stores location name
+  const [searchQuery, setSearchQuery] = useState(""); // Stores search input
+  const [searchResults, setSearchResults] = useState([]); // Stores search results
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["fetchDocProfile"],
@@ -30,6 +37,12 @@ function UpdateProfile() {
       // Set the availability data from the API response
       setAvailability(data.availability);
     }
+    if (data?.location) {
+      // Set the initial location from the API response
+      setLocation(data.location);
+      setLocationName(data.location_name || "");
+      setSearchQuery(data.location_name || "");
+    }
   }, [data]);
 
   const handleProfilePicChange = (e) => {
@@ -39,6 +52,64 @@ function UpdateProfile() {
       setProfilePicUrl(URL.createObjectURL(file)); // Create a URL for the selected file
     }
   };
+
+  const fetchLocationName = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+      );
+      const data = await response.json();
+      if (data.display_name) {
+        setLocationName(data.display_name);
+        setSearchQuery(data.display_name); // Update searchQuery with the location name
+      }
+    } catch (error) {
+      console.error("Error fetching location name:", error);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    setSearchQuery(e.target.value);
+    if (e.target.value.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${e.target.value}`
+      );
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+    }
+  };
+
+  const handleSearchSelect = (lat, lon, name) => {
+    setLocation({ lat: parseFloat(lat), lng: parseFloat(lon) });
+    setLocationName(name);
+    setSearchQuery(name);
+    setSearchResults([]);
+  };
+
+  function LocationMarker() {
+    useMapEvents({
+      click(e) {
+        const { lat, lng } = e.latlng;
+        if (lat && lng) {
+          setLocation({ lat, lng });
+          fetchLocationName(lat, lng);
+        }
+      },
+    });
+
+    return location ? (
+      <Marker position={[location.lat, location.lng]}>
+        <Popup>{locationName || "Your selected location"}</Popup>
+      </Marker>
+    ) : null;
+  }
 
   const addAvailability = () => {
     // Add a new availability object with an empty date and times array
@@ -81,6 +152,8 @@ function UpdateProfile() {
       ...formData,
       availability, // Send the availability data to the backend
       profile_picture: profilePic, // Send the selected profile picture file
+      location, // Send the selected location coordinates
+      location_name: locationName, // Send the selected location name
     };
     console.log(updatedData); // Send this data to your backend
   };
@@ -150,12 +223,55 @@ function UpdateProfile() {
                   <label className="block text-sm font-medium text-gray-700">
                     Location
                   </label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                    defaultValue={data?.location}
-                    {...register("location")}
-                  />
+                  <div className="user">
+                    <FontAwesomeIcon icon={faMap} />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={handleSearch}
+                      placeholder="Search for a location..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                  {searchResults.length > 0 && (
+                    <ul
+                      style={{
+                        listStyle: "none",
+                        padding: 0,
+                        border: "1px solid #ccc",
+                      }}
+                    >
+                      {searchResults.map((result, index) => (
+                        <li
+                          key={index}
+                          style={{
+                            padding: "5px",
+                            cursor: "pointer",
+                            borderBottom: "1px solid #ddd",
+                          }}
+                          onClick={() =>
+                            handleSearchSelect(
+                              result.lat,
+                              result.lon,
+                              result.display_name
+                            )
+                          }
+                        >
+                          {result.display_name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div style={{ height: "300px", width: "100%", marginBottom: "20px" }}>
+                    <MapContainer
+                      center={[27.7172, 85.324]}
+                      zoom={13}
+                      style={{ height: "100%", width: "100%" }}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <LocationMarker />
+                    </MapContainer>
+                  </div>
                 </div>
 
                 {/* About */}
