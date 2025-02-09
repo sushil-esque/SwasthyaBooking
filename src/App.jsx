@@ -35,6 +35,7 @@ import UpdateProfile from "./pages/Doctor/DoctorPages/UpdateProfile";
 import Schedule from "./pages/Doctor/DoctorPages/Schedule";
 import RecomendedDoctors from "./pages/Recommended/RecomendedDoctors";
 import { Toaster } from "./components/ui/toaster";
+import Specializations from "./pages/Admin/AdminPages/Specializations";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -53,6 +54,7 @@ const router = createBrowserRouter(
         <Route path="addDoctors" element={<AddDoctor />} />
         <Route path="doctorList" element={<DoctorList />} />
         <Route path="patients" element={<Patients />} />
+        <Route path="specializations" element={<Specializations />} />
       </Route>
       <Route
         path="/doctorDashboard"

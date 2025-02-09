@@ -1,28 +1,124 @@
+import { showSpecialities } from "@/api/admin";
 import { faEye, faEyeSlash } from "@fortawesome/free-regular-svg-icons";
+import { faMap } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { FaUserDoctor } from "react-icons/fa6";
+import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
 
 function AddDoctor() {
   const fields = "flex flex-col gap-2 w-80"; // Shared styles for field container
   const inputFields = "outline-none h-5 border rounded px-2"; // Shared styles for inputs
+  const { data: specialitiesData, isLoading, isSuccess } = useQuery({
+    queryKey: ["specialities"],
+    queryFn: showSpecialities,
+    retry: 3,
+  });
 
+  isSuccess && console.log(specialitiesData?.data);
+
+  const [location, setLocation] = useState(null); // Stores coordinates
+  const [locationName, setLocationName] = useState(""); // Stores location name
+  const [searchQuery, setSearchQuery] = useState(""); // Stores search input
+  const [searchResults, setSearchResults] = useState([]); // Stores search results
   const [formValues, setFormValues] = useState({
     name: "",
-    specialization: "",
+    speciality_id: "",
     experience: "",
-    default_price: "",
+    fee: "",
     bio: "",
     email: "",
     password: "",
     password_confirmation: "",
-    image: "",
+    longitude: "",
+    latitude: "",
+    location_name: "",
+    profile_picture: "",
     gender: "",
     date_of_birth: "",
     phone_number: "",
     location: "",
-    role: "doctor",
+    status: "active",
+    availability: [
+      {
+        date: "2025-02-10",
+        times: ["09:00 AM", "02:00 PM"]
+      },
+      {
+        date: "2025-02-11",
+        times: ["10:00 AM", "03:00 PM"]
+      }
+    ],
   });
+
+  const fetchLocationName = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+      );
+      const data = await response.json();
+      if (data.display_name) {
+        setLocationName(data.display_name);
+        setSearchQuery(data.display_name); // Update searchQuery with the location name
+        setFormValues((prev) => ({
+          ...prev,
+          location_name: data.display_name,
+          latitude: lat,
+          longitude: lng,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching location name:", error);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    setSearchQuery(e.target.value);
+    if (e.target.value.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${e.target.value}`
+      );
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+    }
+  };
+
+  const handleSearchSelect = (lat, lon, name) => {
+    setLocation({ lat: parseFloat(lat), lng: parseFloat(lon) });
+    setLocationName(name);
+    setSearchQuery(name);
+    setSearchResults([]);
+    setFormValues((prev) => ({
+      ...prev,
+      locationName: name,
+      latitude: lat,
+      longitude: lon,
+    }));
+  };
+
+  function LocationMarker() {
+    useMapEvents({
+      click(e) {
+        const { lat, lng } = e.latlng;
+        setLocation({ lat, lng });
+        fetchLocationName(lat, lng);
+      },
+    });
+
+    return location ? (
+      <Marker position={[location.lat, location.lng]}>
+        <Popup>{locationName || "Your selected location"}</Popup>
+      </Marker>
+    ) : null;
+  }
 
   const [passVis, setPassVis] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -39,20 +135,39 @@ function AddDoctor() {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setFormValues({ ...formValues, image: file });
+    if (file && file.size > 255 * 1024) {
+      alert("File size must be less than 255KB");
+      return;
+    }
+    setFormValues({ ...formValues, profile_picture: file });
   };
-
+  
   const submit = async () => {
     const formData = new FormData();
     Object.entries(formValues).forEach(([key, value]) => {
-      formData.append(key, value);
+      if (key !== "availability") {
+        formData.append(key, value);
+    }
     });
+    
+  // Append availability properly (each date separately)
+  formValues.availability.forEach((slot, index) => {
+    formData.append(`availability[${index}][date]`, slot.date);
+    slot.times.forEach((time, timeIndex) => {
+        formData.append(`availability[${index}][times][${timeIndex}]`, time);
+    });
+});
+console.log("FormData contents:");
+for (let pair of formData.entries()) {
+    console.log(pair[0], pair[1]);
+}
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/doctors", {
+      const response = await fetch("http://127.0.0.1:8000/api/admin/doctor", {
         method: "POST",
         body: formData,
         headers: {
+          
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
@@ -68,26 +183,38 @@ function AddDoctor() {
       }
       console.log("Registration successful:", responseData);
       alert("Doctor registered successfully!");
-       // Reset form
-    setFormValues({
-      name: "",
-      specialization: "",
-      experience: "",
-      default_price: "",
-      bio: "",
-      email: "",
-      password: "",
-      password_confirmation: "",
-      image: "",
-      gender: "",
-      date_of_birth: "",
-      phone_number: "",
-      location: "",
-      role: "doctor",
-
-        // Reset error state
-    
-    });
+      // Reset form
+      setFormValues({
+        name: "",
+        speciality_id: "",
+        experience: "",
+        fee: "",
+        bio: "",
+        email: "",
+        password: "",
+        password_confirmation: "",
+        longitude: "",
+        latitude: "",
+        location_name: "",
+        profile_picture: "",
+        gender: "",
+        date_of_birth: "",
+        phone_number: "",
+        location: "",
+        availability: [
+          {
+            date: "2025-02-10",
+            times: ["09:00 AM", "02:00 PM"]
+          },
+          {
+            date: "2025-02-11",
+            times: ["10:00 AM", "03:00 PM"]
+          }
+        ],
+        status: "active",
+      });
+      setIsError(false);
+      setErrorMessage([]);
     } catch (error) {
       console.error("Error submitting form:", error.message);
       alert("Error registering user. Please try again.");
@@ -99,7 +226,7 @@ function AddDoctor() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          console.log(formValues.default_price);
+          console.log(formValues);
           submit();
         }}
         className="flex flex-wrap gap-5"
@@ -181,29 +308,56 @@ function AddDoctor() {
         {/* Location */}
         <div className={fields}>
           <label htmlFor="location">Location</label>
-          <input
-            type="text"
-            name="location"
-            id="location"
-            placeholder="Enter location"
-            className={inputFields}
-            value={formValues.location}
-            onChange={handleInputChange}
-          />
+          <div className="user">
+            <FontAwesomeIcon icon={faMap} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearch}
+              id="location"
+              placeholder="Search for a location..."
+            />
+          </div>
+          {searchResults.length > 0 && (
+            <ul style={{ listStyle: "none", padding: 0, border: "1px solid #ccc" }}>
+              {searchResults.map((result, index) => (
+                <li
+                  key={index}
+                  style={{ padding: "5px", cursor: "pointer", borderBottom: "1px solid #ddd" }}
+                  onClick={() => handleSearchSelect(result.lat, result.lon, result.display_name)}
+                >
+                  {result.display_name}
+                </li>
+              ))}
+            </ul>
+          )}
+          <hr />
+        </div>
+
+        {/* Map Container */}
+        <div style={{ height: "300px", width: "100%", marginBottom: "20px" }}>
+          <MapContainer center={[27.7172, 85.324]} zoom={13} style={{ height: "100%", width: "100%" }}>
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <LocationMarker />
+          </MapContainer>
         </div>
 
         {/* Specialty */}
         <div className={fields}>
           <label htmlFor="speciality">Specialty</label>
-          <input
-            type="text"
-            name="specialization"
-            id="speciality"
-            placeholder="Enter specialty"
+          <select
+            name="speciality_id"
             className={inputFields}
-            value={formValues.specialization}
             onChange={handleInputChange}
-          />
+            value={formValues.speciality_id}
+          >
+            <option value="">Select a specialty</option>
+            {specialitiesData?.data.map((speciality) => (
+              <option key={speciality.id} value={speciality.id}>
+                {speciality.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Experience */}
@@ -225,11 +379,11 @@ function AddDoctor() {
           <label htmlFor="fee">Appointment Fee</label>
           <input
             type="number"
-            name="default_price"
+            name="fee"
             id="fee"
             placeholder="Enter fee"
             className={inputFields}
-            value={formValues.default_price}
+            value={formValues.fee}
             onChange={handleInputChange}
           />
         </div>
@@ -261,19 +415,6 @@ function AddDoctor() {
           ></textarea>
         </div>
 
-        {/* About */}
-        {/* <div className={fields}>
-          <label htmlFor="about">About</label>
-          <textarea
-            name="about"
-            id="about"
-            placeholder="Enter details about the doctor"
-            className={`${inputFields} h-20 resize-none`}
-            value={formValues.about}
-            onChange={handleInputChange}
-          ></textarea>
-        </div> */}
-
         {/* Email */}
         <div className={fields}>
           <label htmlFor="email">Email</label>
@@ -288,6 +429,7 @@ function AddDoctor() {
           />
         </div>
 
+        {/* Date of Birth */}
         <div className={fields}>
           <label htmlFor="birthDate">Date of Birth</label>
           <input

@@ -6,18 +6,20 @@ import {
   faUserAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { FaBell } from "react-icons/fa6";
 import { NavLink, useNavigate } from "react-router-dom";
+import AuthContext from "./AuthContext";
 function Header() {
   const navigate = useNavigate();
   const [isActive, setIsActive] = useState(false);
   const token = localStorage.getItem("token");
+const { logout } =  useContext(AuthContext);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    // window.alert("You are logged out");
+   // window.alert("You are logged out");
     // window.location.reload();
+    logout();
 
     toast({
       title: "You are logged out",

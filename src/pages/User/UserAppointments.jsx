@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { getAppointments } from "../../api/user";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function UserAppointments() {
-  const { data } = useQuery({
+  const { data: appointmentData, isLoading } = useQuery({
     queryKey: ["userAppointments"],
     queryFn: getAppointments,
     retry: 3,
@@ -11,15 +12,27 @@ function UserAppointments() {
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
+  const navigate = useNavigate();
+  if (isLoading) return "Loading...";
+
   // Sort function
   const sortedData = () => {
-    if (!data) return [];
+    if (!appointmentData?.data) return [];
 
-    const sortedArray = [...data];
+    const sortedArray = [...appointmentData.data];
     if (sortConfig.key) {
       sortedArray.sort((a, b) => {
-        const valueA = a[sortConfig.key];
-        const valueB = b[sortConfig.key];
+        let valueA, valueB;
+
+        // Handle nested keys (e.g., "doctor.name")
+        if (sortConfig.key.includes(".")) {
+          const keys = sortConfig.key.split(".");
+          valueA = keys.reduce((obj, key) => obj[key], a);
+          valueB = keys.reduce((obj, key) => obj[key], b);
+        } else {
+          valueA = a[sortConfig.key];
+          valueB = b[sortConfig.key];
+        }
 
         if (valueA < valueB) return sortConfig.direction === "asc" ? -1 : 1;
         if (valueA > valueB) return sortConfig.direction === "asc" ? 1 : -1;
@@ -80,63 +93,66 @@ function UserAppointments() {
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_id")}
+                onClick={() => requestSort("id")}
               >
                 Appointment ID
-                <SortArrows columnKey="appointment_id" />
+                <SortArrows columnKey="id" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_date")}
+                onClick={() => requestSort("date")}
               >
                 Appointment Date & Time
-                <SortArrows columnKey="appointment_date" />
+                <SortArrows columnKey="date" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("amount")}
+                onClick={() => requestSort("doctor.name")}
+              >
+                Doctor
+                <SortArrows columnKey="doctor.name" />
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 cursor-pointer"
+                onClick={() => requestSort("fee")}
               >
                 Amount
-                <SortArrows columnKey="amount" />
+                <SortArrows columnKey="fee" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_status")}
+                onClick={() => requestSort("status")}
               >
                 Appointment Status
-                <SortArrows columnKey="appointment_status" />
+                <SortArrows columnKey="status" />
               </th>
-              <th scope="col" className="px-6 py-3">
-                <span className="sr-only">Edit</span>
-              </th>
+              
             </tr>
           </thead>
           <tbody>
             {finalData?.map((appointment) => (
-              <tr key={appointment.appointment_id} className="bg-white border-b">
+              <tr key={appointment.id} className="bg-white border-b">
                 <th
                   scope="row"
                   className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
                 >
-                  {appointment.appointment_id}
+                  {appointment.id}
                 </th>
                 <td className="px-6 py-4">
-                  <div>{appointment.appointment_date}</div>
-                  <div className="text-gray-500">{appointment.appointment_time}</div>
+                  <div>{appointment.date}</div>
+                  <div className="text-gray-500">{appointment.time}</div>
                 </td>
-                <td className="px-6 py-4">${appointment.amount}</td>
-                <td className="px-6 py-4">{appointment.appointment_status}</td>
-                <td className="px-6 py-4 text-right">
-                  <a
-                    href="#"
-                    className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                  >
-                    Edit
-                  </a>
+                <td className="px-6 py-4 text-blue-600 cursor-pointer hover:underline"                   onClick={() => navigate(`/findDoctors/${appointment.doctor.id}`)}
+                >
+                  {appointment.doctor.name}
                 </td>
+                <td className="px-6 py-4">${appointment.doctor.fee}</td>
+                <td className="px-6 py-4">{appointment.status}</td>
+                
               </tr>
             ))}
           </tbody>

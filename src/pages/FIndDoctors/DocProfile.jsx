@@ -1,59 +1,96 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle, faCircleInfo } from "@fortawesome/free-solid-svg-icons";
 import "./doctorPage.css";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaLocationDot } from "react-icons/fa6";
 import { MdFavorite } from "react-icons/md";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { addFavorite, bookAppointment } from "@/api/user";
+import AuthContext from "@/components/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 function DocProfile() {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const params = useParams();
+  const { id: doctorId } = params; // Doctor ID from URL
+  const navigate = useNavigate();
+  const {isAuthenticated} = useContext(AuthContext);
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
   } = useForm();
-  const onSubmit = (data) => console.log(data);
+  const { mutate: favoriteMutate, isPending } = useMutation({
+    mutationFn: addFavorite,
+    onSuccess: () => {
+      console.log("successfully added to favorites");
+      toast({
+        title: "Successfully added to favorites",
+        variant: "default",
+      })
+    },
+  });
 
-  const params = useParams();
-  const newParams = params.id;
+  const { mutate: bookAppointmentMutate, isLoading: isBooking } = useMutation({
+    mutationFn: bookAppointment,
+    onSuccess: () => {
+      alert("Appointment booked successfully");
+    },
+    onError: () => {
+      alert("Failed to book appointment");
+    },
+  });
+
   // console.log(newParams);
-  const [data, setData] = useState([]);
-  const [error, setError] = useState(null);
-  async function fetchDoctors() {
-    try {
-      const rawData = await fetch(
-        "https://6734b250a042ab85d11b42b1.mockapi.io/api/swasthya/Doctors"
-      );
-      if (!rawData.ok) {
-        throw new Error("error fetching data");
-      }
-      const data = await rawData.json();
-      setData(data);
-    } catch (error) {
-      setError("error fetching data");
-      console.log(error);
+  const fetchDoctorById = async (id) => {
+    const response = await fetch(`${BASE_URL}doctor/${id}`);
+    if (!response.ok) {
+      throw new Error("Error fetching doctor data");
     }
-  }
-  useEffect(() => {
-    fetchDoctors();
-  }, []);
-  const curdata = data.find((doctor) => `${doctor.id}` === newParams);
+    return response.json();
+  };
+
+  const {
+    data: doctor,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["doctor", doctorId], // Unique query key
+    queryFn: () => fetchDoctorById(doctorId), // Fetch function
+    retry: 3, // Retry if API fails
+  });
+
   // console.log(curdata);
-  if (error) {
-    return <div>{error}</div>;
-  }
+  if (isLoading) return <div>Loading doctor details...</div>;
+  if (error) return <div>Error fetching doctor details</div>;
 
   // Ensure curdata is defined before rendering details
-  if (!curdata) {
-    return <div>Loading...</div>;
-  }
+
   const selectedDate = watch("selectedDate");
-return (
+  const onSubmit = (data) => {
+    if (!isAuthenticated) {
+      alert("Please login to book an appointment.");
+      navigate("/login");
+      return;
+    }
+
+    const appointmentData = {
+      doctor_id: parseInt(doctorId),
+      date: data.selectedDate,
+      time: data.selectedTime,
+    };
+
+    console.log(appointmentData);
+    bookAppointmentMutate(appointmentData);
+  };
+
+  return (
     <>
       <div style={{}}>
-        <div className="docProfileBody" >
+        <div className="docProfileBody">
           <div
             style={{
               display: "flex",
@@ -62,8 +99,12 @@ return (
           >
             <div className="docProfileImage">
               <img
-                src={curdata.Image}
-                alt="docImage"
+                src={
+                  doctor?.profile_picture
+                    ? `${BASE_URL}${doctor.profile_picture}`
+                    : "/public/doctorPic.jpg"
+                }
+                alt="Doctor"
                 style={{
                   height: "288px",
                   width: "288px",
@@ -75,22 +116,22 @@ return (
 
             <div className="docProfileDesc">
               <p style={{ fontSize: "1.875rem", margin: "0" }}>
-                Dr. {curdata.Name}{" "}
+                Dr. {doctor.name}{" "}
                 <FontAwesomeIcon
                   icon={faCheckCircle}
                   style={{ color: "blue" }}
                 />
               </p>
               <div className="spec-exp">
-                <p style={{ margin: "0" }}>{curdata.Speciality}</p>
-                <button>{curdata.Experience} years</button>
+                <p style={{ margin: "0" }}>{doctor.Speciality}</p>
+                <button>{doctor.experience} years</button>
               </div>
               <div className="docAbout">
                 <h5>
                   About <FontAwesomeIcon icon={faCircleInfo} />{" "}
                 </h5>
                 <p style={{ color: "rgb(75 85 99 )", marginTop: "4px" }}>
-                  {curdata.About}
+                  {doctor.bio}
                 </p>
               </div>
               <div style={{ fontSize: "1.1em" }}>
@@ -99,18 +140,26 @@ return (
                     color: "rgb(75 85 99 )",
                   }}
                 >
-                  Appointment fee:{" "}
+                  Appointment fee:NPR {doctor.fee}
                 </span>
-                $15
               </div>
               <div className="mt-4 text-l font-bold text-slate-500 flex items-center">
-              <FaLocationDot className="text-2xl" /> 
-                {curdata.Location}
-                <button className="ml-auto flex justify-center items-center p-1 bg-white border-none hover:text-slate-600"><MdFavorite className="text-xl" />Add to favourites</button>
-
+                <FaLocationDot className="text-2xl" />
+                {doctor.location_name}
+                {
+                  isAuthenticated && (
+                    <button
+                    className="ml-auto flex justify-center items-center p-1 bg-white border-none hover:text-slate-600"
+                    onClick={() => favoriteMutate(doctor.id)} // Pass doctor ID
+                    disabled={isPending} // Disable button while adding
+                  >
+                    <MdFavorite className="text-xl" />{" "}
+                    {isPending ? "Adding..." : "Add to Favorites"}
+                  </button>
+                  )
+                }
+               
               </div>
-              
-             
             </div>
           </div>
           <form className="availability" onSubmit={handleSubmit(onSubmit)}>
@@ -118,8 +167,9 @@ return (
             <div
               style={{ display: "flex", flexDirection: "column", gap: "20px" }}
             >
-              {curdata.availability?.map((slot) => (
-                <div key={slot.date} style={{ display: "flex", gap: "30px" }}>
+              {console.log(doctor.doctor_available)}
+              {doctor.doctor_available?.map((slot) => (
+                <div key={slot.id} style={{ display: "flex", gap: "30px" }}>
                   <label>
                     <input
                       type="radio"
@@ -128,10 +178,10 @@ return (
                     />
                     {slot.date}
                   </label>
-                  {selectedDate === slot.date &&
+                  {selectedDate === slot.date && (
                     <div className="time-slots">
-                      {slot.times.map((time) => (
-                        <label key={time}>
+                      {slot.available_times?.map(({ id, time }) => (
+                        <label key={id}>
                           <input
                             type="radio"
                             value={time}
@@ -141,7 +191,7 @@ return (
                         </label>
                       ))}
                     </div>
-                  }
+                  )}
                 </div>
               ))}
             </div>

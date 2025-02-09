@@ -15,16 +15,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { getDoctorAppointments } from "@/api/doctor";
 
 function DoctorAppointments() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["userAppointments"],
-    queryFn: getAppointments,
+  const { data: appointmentData, isLoading } = useQuery({
+    queryKey: ["doctorAppointments"],
+    queryFn: getDoctorAppointments,
     retry: 3,
   });
-  
-
-
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -34,13 +32,22 @@ function DoctorAppointments() {
   }
   // Sort function
   const sortedData = () => {
-    if (!data) return [];
+    if (!appointmentData?.data) return [];
 
-    const sortedArray = [...data];
+    const sortedArray = [...appointmentData.data];
     if (sortConfig.key) {
       sortedArray.sort((a, b) => {
-        const valueA = a[sortConfig.key];
-        const valueB = b[sortConfig.key];
+        let valueA, valueB;
+
+        // Handle nested keys (e.g., "doctor.name")
+        if (sortConfig.key.includes(".")) {
+          const keys = sortConfig.key.split(".");
+          valueA = keys.reduce((obj, key) => obj[key], a);
+          valueB = keys.reduce((obj, key) => obj[key], b);
+        } else {
+          valueA = a[sortConfig.key];
+          valueB = b[sortConfig.key];
+        }
 
         if (valueA < valueB) return sortConfig.direction === "asc" ? -1 : 1;
         if (valueA > valueB) return sortConfig.direction === "asc" ? 1 : -1;
@@ -102,7 +109,7 @@ function DoctorAppointments() {
   };
   const handleAccept = (id) => {
     console.log(`Accepting appointment with ID: ${id}`);
-   
+
     // Add logic for accepting the appointment
   };
 
@@ -110,13 +117,12 @@ function DoctorAppointments() {
     console.log(`Rejecting appointment with ID: ${id}`);
     // Add logic for rejecting the appointment
   };
-  console.log(selectedPatient)
+  console.log(selectedPatient);
 
   return (
     <div>
       {/* Patient Details Dialog */}
       {selectedPatient && (
-        
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -131,7 +137,6 @@ function DoctorAppointments() {
           </DialogContent>
         </Dialog>
       )}
-      
 
       <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table className="w-full text-sm text-left rtl:text-right text-gray-500">
@@ -140,18 +145,18 @@ function DoctorAppointments() {
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_id")}
+                onClick={() => requestSort("id")}
               >
                 Appointment ID
-                <SortArrows columnKey="appointment_id" />
+                <SortArrows columnKey="id" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("appointment_date")}
+                onClick={() => requestSort("date")}
               >
                 Appointment Date & Time
-                <SortArrows columnKey="appointment_date" />
+                <SortArrows columnKey="date" />
               </th>
               <th
                 scope="col"
@@ -202,9 +207,7 @@ function DoctorAppointments() {
                 </td>
                 <td
                   className="px-6 py-4 cursor-pointer text-blue-500 hover:underline"
-                  onClick={() => handleShowPatientDetails(appointment)
-                     
-                  }
+                  onClick={() => handleShowPatientDetails(appointment)}
                 >
                   {appointment.patient_name}
                 </td>

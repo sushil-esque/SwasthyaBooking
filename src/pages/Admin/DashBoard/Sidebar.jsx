@@ -46,6 +46,13 @@ function Sidebar({openSidebarToggle}) {
 
             </NavLink>
         </li>
+        <li  className={openSidebarToggle? "sidebar-list-item": "collapsed-sidebar-list-item"}>
+            <NavLink to={"specializations"}>
+                <BiUser className="icon "/>
+                {openSidebarToggle && <span>Specializations</span>}
+
+            </NavLink>
+        </li>
        
       </ul>
     </aside>

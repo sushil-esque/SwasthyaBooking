@@ -9,9 +9,10 @@ import {
   faEye,
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import Loader from "../../components/Loader";
 import { toast } from "@/hooks/use-toast";
+import AuthContext from "@/components/AuthContext";
 
 function Login() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -21,6 +22,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const{login} = useContext(AuthContext);
 
   async function submit() {
     const loginJson = {
@@ -40,20 +42,22 @@ function Login() {
         throw new Error("Login Failed!!!");
       }
       const data = await rawData.json();
+      console.log(data);
 
-      const { access_token, role, user_id } = data;
-      if (access_token) {
+      const { token, user } = data;
+      if (token) {
         // alert("Login successful");
         toast({
           title: "Login successful",
           description: "You have logged in successfully",
         });
-        localStorage.setItem("token", access_token);
-        console.log("role:", role);
+        // localStorage.setItem("token", token);
+        // console.log("role:", user);
+        login(token);
 
-        if (user_id) {
-          localStorage.setItem("user_id", user_id);
-          console.log("User ID stored:", user_id);
+        if (user.id) {
+          localStorage.setItem("user_id", user.id);
+          console.log("User ID stored:", user.id);
         } else {
           console.warn("User ID not found in response");
         }
@@ -67,9 +71,9 @@ function Login() {
       }
 
       // Redirect based on admin status
-      if (role === "admin") {
+      if (user.role === "admin") {
         navigate("/adminDashboard");
-      } else if (role === "doctor") {
+      } else if (user.role === "doctor") {
         navigate("/doctorDashboard");
       } else {
         navigate("/home");

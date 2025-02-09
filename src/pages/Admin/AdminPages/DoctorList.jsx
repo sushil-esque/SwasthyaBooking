@@ -1,21 +1,42 @@
 import { useQuery } from "@tanstack/react-query";
-import { getDoctors } from "../../../api/user";
+import { showDoctors, showSpecialities } from "@/api/admin";
 import { useState } from "react";
+import Loader from "@/components/Loader";
 
 function DoctorList() {
-  const { data } = useQuery({
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  const {
+    data,
+    isLoading,
+    isSuccess: doctorsSuccess,
+  } = useQuery({
     queryKey: ["doctorList"],
-    queryFn: getDoctors,
+    queryFn: showDoctors,
     retry: 3,
   });
+
+  doctorsSuccess && console.log(data.data);
+
+  const {
+    data: specializationData,
+    isLoading: specilizationLoading,
+    isSuccess,
+  } = useQuery({
+    queryKey: ["specializations"],
+    queryFn: showSpecialities,
+    retry: 3,
+  });
+
+  isSuccess && console.log(specializationData?.data);
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   // Sort function
   const sortedData = () => {
-    if (!data) return [];
+    if (!data || !data.data) return [];
 
-    const sortedArray = [...data];
+    const sortedArray = [...data.data];
     if (sortConfig.key) {
       sortedArray.sort((a, b) => {
         const valueA = a[sortConfig.key];
@@ -37,12 +58,25 @@ function DoctorList() {
     setSortConfig({ key, direction });
   };
 
+  const getSpecializationName = (id) => {
+    if (!specializationData || !specializationData.data || !id)
+      return "Unknown";
+    console.log("Looking for ID:", id);
+    const specialization = specializationData?.data.find(
+      (spec) => spec.id.toString() === id
+    );
+    console.log("Found Specialization:", specialization);
+    return specialization ? specialization.name : "Unknown Specialization";
+  };
+
   const finalData = sortedData();
 
-  // Arrow Component
+  if (isLoading || specilizationLoading) {
+    return <Loader />;
+  }
+
   const SortArrows = ({ columnKey }) => (
     <div className="inline-flex flex-col ml-1">
-      {/* Up Arrow */}
       <svg
         className={`w-3 h-3 ${
           sortConfig.key === columnKey && sortConfig.direction === "asc"
@@ -55,7 +89,6 @@ function DoctorList() {
       >
         <path d="M5 12l5-5 5 5H5z" />
       </svg>
-      {/* Down Arrow */}
       <svg
         className={`w-3 h-3 ${
           sortConfig.key === columnKey && sortConfig.direction === "desc"
@@ -85,83 +118,80 @@ function DoctorList() {
                 ID
                 <SortArrows columnKey="id" />
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("Image")}
-              >
+              <th scope="col" className="px-6 py-3">
                 Image
-                <SortArrows columnKey="Image" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("Name")}
+                onClick={() => requestSort("name")}
               >
                 Name
-                <SortArrows columnKey="Name" />
+                <SortArrows columnKey="name" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("Email")}
+                onClick={() => requestSort("email")}
               >
                 Email
-                <SortArrows columnKey="Email" />
+                <SortArrows columnKey="email" />
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("Phone")}
+                onClick={() => requestSort("phone_number")}
               >
                 Phone
-                <SortArrows columnKey="Phone" />
+                <SortArrows columnKey="phone_number" />
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("Speciality")}
-              >
+              <th scope="col" className="px-6 py-3">
                 Speciality
-                <SortArrows columnKey="Speciality" />
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 cursor-pointer"
-               
-              >
+              <th scope="col" className="px-6 py-3">
+                Available Times
+              </th>
+              <th scope="col" className="px-6 py-3">
                 Action
               </th>
             </tr>
           </thead>
           <tbody>
-            {finalData?.map((doctors) => (
-              <tr
-                key={doctors.id}
-                className="bg-white border-b"
-              >
-                <th
-                  scope="row"
-                  className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
-                >
-                  {doctors.id}
-                </th>
-                <td className="px-6 py-4">
-                  <div><img src={doctors.Image} alt="" className="w-10 h-10" /></div>
-                 
+            {finalData?.map((doctor) => (
+              <tr key={doctor.id} className="bg-white border-b">
+                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                  {doctor.id}
                 </td>
                 <td className="px-6 py-4">
-                    {doctors.Name}
+                  {console.log(`http://127.0.0.1:8000${doctor.profile_picture}`)}
+                  <img
+                    src={`http://127.0.0.1:8000${doctor.profile_picture}`}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full"
+                  />
                 </td>
-                <td className="px-6 py-4">{doctors.Email}</td>
-                <td className="px-6 py-4">{doctors.Phone}</td>
-                <td className="px-6 py-4">{doctors.Speciality}</td>
-
-
+                <td className="px-6 py-4">{doctor.name}</td>
+                <td className="px-6 py-4">{doctor.email}</td>
+                <td className="px-6 py-4">{doctor.phone_number}</td>
+                <td className="px-6 py-4">
+                  {getSpecializationName(doctor.speciality_id)}
+                </td>
+                <td className="px-6 py-4">
+                  {doctor.doctor_available.map((availability) => (
+                    <div key={availability.id}>
+                      <p>{availability.date}</p>
+                      <ul>
+                        {availability.available_times.map((time) => (
+                          <li key={time.id}>{time.time}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </td>
                 <td className="px-6 py-4 text-right">
                   <a
                     href="#"
-                    className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                    className="font-medium text-blue-600 hover:underline"
                   >
                     Edit
                   </a>

@@ -11,6 +11,7 @@ import {
   faPencil,
 } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
 
 function ProfileSettings() {
   const [passVis, setPassvis] = useState(false);
@@ -22,6 +23,10 @@ function ProfileSettings() {
   const [birthDate, setBirthDate] = useState("");
   const [gender, setGender] = useState("");
   const [location, setLocation] = useState("");
+  const [locationName, setLocationName] = useState(""); // Stores location name
+  const [searchQuery, setSearchQuery] = useState(""); // Stores search input
+  const [searchResults, setSearchResults] = useState([]); // Stores search results
+
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [profileImage, setProfileImage] = useState(null);
   const [profileImageUrl, setProfileImageUrl] = useState(null); // To display existing profile image
@@ -31,13 +36,72 @@ function ProfileSettings() {
   function showpw() {
     setPassvis(!passVis);
   }
+   const fetchLocationName = async (lat, lng) => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+        );
+        const data = await response.json();
+        if (data.display_name) {
+          setLocationName(data.display_name);
+          setSearchQuery(data.display_name); // Update searchQuery with the location name
+        }
+      } catch (error) {
+        console.error("Error fetching location name:", error);
+      }
+    };
+  
+    // Fetch search results (Forward Geocoding)
+    const handleSearch = async (e) => {
+      setSearchQuery(e.target.value);
+      if (e.target.value.length < 3) {
+        setSearchResults([]);
+        return;
+      }
+  
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${e.target.value}`
+        );
+        const data = await response.json();
+        setSearchResults(data);
+      } catch (error) {
+        console.error("Error fetching search results:", error);
+      }
+    };
+  
+    // Handle search selection
+    const handleSearchSelect = (lat, lon, name) => {
+      setLocation({ lat: parseFloat(lat), lng: parseFloat(lon) });
+      setLocationName(name);
+      setSearchQuery(name);
+      setSearchResults([]);
+    };
+  
+    // Handle user clicking on the map
+    function LocationMarker() {
+      useMapEvents({
+        click(e) {
+          const { lat, lng } = e.latlng;
+          setLocation({ lat, lng });
+          fetchLocationName(lat, lng);
+        },
+      });
+  
+      return location ? (
+        <Marker position={[location.lat, location.lng]}>
+          <Popup>{locationName || "Your selected location"}</Popup>
+        </Marker>
+      ) : null;
+    }
+  
 
   // Fetch existing user data
   async function fetchUserData() {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/me", {
+      const response = await fetch("http://127.0.0.1:8000/api/user/me", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -76,7 +140,10 @@ function ProfileSettings() {
     formData.append("image", profileImage);
     formData.append("phone_number", phone);
     formData.append("gender", gender);
-    formData.append("location", location);
+    formData.append("location_name", location);
+    formData.append("latitude", location.lat); // Add latitude
+    formData.append("longitude", location.lng); // Add longitude
+
 
     try {
       const token = localStorage.getItem("token");
@@ -270,14 +337,54 @@ function ProfileSettings() {
               <FontAwesomeIcon icon={faMap} className="input-icon" />
               <input
                 type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                value={searchQuery}
+                onChange={handleSearch}
                 id="location"
-                placeholder="Enter your location"
+                placeholder="Search for a location..."
                 className="input-field"
               />
             </div>
+            {searchResults.length > 0 && (
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  border: "1px solid #ccc",
+                }}
+              >
+                {searchResults.map((result, index) => (
+                  <li
+                    key={index}
+                    style={{
+                      padding: "5px",
+                      cursor: "pointer",
+                      borderBottom: "1px solid #ddd",
+                    }}
+                    onClick={() =>
+                      handleSearchSelect(
+                        result.lat,
+                        result.lon,
+                        result.display_name
+                      )
+                    }
+                  >
+                    {result.display_name}
+                  </li>
+                ))}
+              </ul>
+            )}      
           </div>
+            <div style={{ height: "300px", width: "100%", marginBottom: "20px" }}>
+                      <MapContainer
+                        center={[27.7172, 85.324]}
+                        zoom={13}
+                        style={{ height: "100%", width: "100%" }}
+                      >
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                        <LocationMarker />
+                      </MapContainer>
+                    </div>
+          
           {/* 
         <div className="form-field">
           <label htmlFor="profilePic">Profile Picture</label>

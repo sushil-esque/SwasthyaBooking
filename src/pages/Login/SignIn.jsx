@@ -11,7 +11,13 @@ import {
   faMap,
 } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
-import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  Marker,
+  Popup,
+  TileLayer,
+  useMapEvents,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 function SignIn() {
@@ -54,7 +60,7 @@ function SignIn() {
       console.error("Error fetching location name:", error);
     }
   };
-  
+
   // Fetch search results (Forward Geocoding)
   const handleSearch = async (e) => {
     setSearchQuery(e.target.value);
@@ -112,13 +118,12 @@ function SignIn() {
     formData.append("password", password);
     formData.append("password_confirmation", passwordConfirmation);
     formData.append("date_of_birth", birthDate);
-    formData.append("image", profileImage);
+    formData.append("profile_picture", profileImage);
     formData.append("phone_number", phone);
     formData.append("gender", gender);
-    formData.append("location", locationName); // Use location name
+    formData.append("location_name", locationName); // Use location name
     formData.append("latitude", location.lat); // Add latitude
     formData.append("longitude", location.lng); // Add longitude
-    formData.append("role", patient);
 
     try {
       const rawData = await fetch(BASE_URL + "register", {
@@ -135,13 +140,12 @@ function SignIn() {
     } catch (error) {
       console.error("Error registering user:", error);
       console.log(formData);
-
     }
   };
 
   return (
-     
     <div className="signinWrapper">
+      {console.log(locationName)}
       <div className="siginPage">
         <div>
           <h2>Create an account</h2>
@@ -271,7 +275,11 @@ function SignIn() {
                 required
               />
               <button onClick={showpw} type="button">
-                {passVis ? <FontAwesomeIcon icon={faEye} /> : <FontAwesomeIcon icon={faEyeSlash} />}
+                {passVis ? (
+                  <FontAwesomeIcon icon={faEye} />
+                ) : (
+                  <FontAwesomeIcon icon={faEyeSlash} />
+                )}
               </button>
             </div>
             <hr />
@@ -291,7 +299,11 @@ function SignIn() {
                 required
               />
               <button onClick={showpw} type="button">
-                {passVis ? <FontAwesomeIcon icon={faEye} /> : <FontAwesomeIcon icon={faEyeSlash} />}
+                {passVis ? (
+                  <FontAwesomeIcon icon={faEye} />
+                ) : (
+                  <FontAwesomeIcon icon={faEyeSlash} />
+                )}
               </button>
             </div>
             <hr />
@@ -330,27 +342,46 @@ function SignIn() {
                 id="location"
                 placeholder="Search for a location..."
               />
-             
             </div>
             {searchResults.length > 0 && (
-                <ul style={{ listStyle: "none", padding: 0, border: "1px solid #ccc" }}>
-                  {searchResults.map((result, index) => (
-                    <li
-                      key={index}
-                      style={{ padding: "5px", cursor: "pointer", borderBottom: "1px solid #ddd" }}
-                      onClick={() => handleSearchSelect(result.lat, result.lon, result.display_name)}
-                    >
-                      {result.display_name}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  border: "1px solid #ccc",
+                }}
+              >
+                {searchResults.map((result, index) => (
+                  <li
+                    key={index}
+                    style={{
+                      padding: "5px",
+                      cursor: "pointer",
+                      borderBottom: "1px solid #ddd",
+                    }}
+                    onClick={() =>
+                      handleSearchSelect(
+                        result.lat,
+                        result.lon,
+                        result.display_name
+                      )
+                    }
+                  >
+                    {result.display_name}
+                  </li>
+                ))}
+              </ul>
+            )}
             <hr />
           </div>
 
           {/* Map Container */}
           <div style={{ height: "300px", width: "100%", marginBottom: "20px" }}>
-            <MapContainer center={[27.7172, 85.324]} zoom={13} style={{ height: "100%", width: "100%" }}>
+            <MapContainer
+              center={[27.7172, 85.324]}
+              zoom={13}
+              style={{ height: "100%", width: "100%" }}
+            >
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <LocationMarker />
             </MapContainer>
