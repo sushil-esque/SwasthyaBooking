@@ -16,6 +16,8 @@ import { useQuery } from "@tanstack/react-query";
 
 function DoctorPage() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
+
 
   const [speciality, setSpeciality] = useState("");
   const [searchTerm, setSearchTerm] = useState(""); // State for search input
@@ -128,7 +130,7 @@ function DoctorPage() {
                   <img
                     src={
                       doctor?.profile_picture
-                        ? `${BASE_URL}${doctor.profile_picture}`
+                        ? `${IMAGE_BASE_URL}${doctor.profile_picture}`
                         : "/public/doctorPic.jpg"
                     }
                     alt="Doctor"

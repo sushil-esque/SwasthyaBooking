@@ -23,9 +23,7 @@ async function getDoctors() {
 async function getPatients() {
   return await axiosWithAuth.get(`${BASE_URL}patients`);
 }
-async function getMe() {
-  return await axiosWithAuth.get(`${BASE_URL}me`);
-}
+
 async function addFavorite(id) {
   return await axiosWithAuth.post(`${BASE_URL}user/favorites/${id}`);
 }
@@ -41,6 +39,7 @@ async function deleteFavorite(id) {
   return await axiosWithAuth.delete(`${BASE_URL}user/favorites/${id}`);
 }
 
+
 export { deleteFavorite };
 
 export {getFavorites};
@@ -51,7 +50,6 @@ export { addFavorite };
 
 export { userLogin };
 
-export { getMe };
 
 export { getPatients };
 

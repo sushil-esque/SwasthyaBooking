@@ -13,6 +13,8 @@ import { toast } from "@/hooks/use-toast";
 
 function DocProfile() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
+
   const params = useParams();
   const { id: doctorId } = params; // Doctor ID from URL
   const navigate = useNavigate();
@@ -23,6 +25,12 @@ function DocProfile() {
     watch,
     formState: { errors },
   } = useForm();
+
+  const fetchSpecialities = async () => {
+    const response = await fetch(`${BASE_URL}speciality?active=true`);
+    if (!response.ok) throw new Error("Error fetching specialities");
+    return response.json();
+  };
   const { mutate: favoriteMutate, isPending } = useMutation({
     mutationFn: addFavorite,
     onSuccess: () => {
@@ -34,7 +42,7 @@ function DocProfile() {
     },
   });
 
-  const { mutate: bookAppointmentMutate, isLoading: isBooking } = useMutation({
+  const { mutate: bookAppointmentMutate, isPending: isBooking } = useMutation({
     mutationFn: bookAppointment,
     onSuccess: () => {
       alert("Appointment booked successfully");
@@ -62,6 +70,16 @@ function DocProfile() {
     queryFn: () => fetchDoctorById(doctorId), // Fetch function
     retry: 3, // Retry if API fails
   });
+  const {
+    data: specializationData,
+    isLoading: specializationLoading,
+    isSuccess,
+  } = useQuery({
+    queryKey: ["specializations"],
+    queryFn: fetchSpecialities,
+    retry: 3,
+  });
+
 
   // console.log(curdata);
   if (isLoading) return <div>Loading doctor details...</div>;
@@ -86,6 +104,15 @@ function DocProfile() {
     console.log(appointmentData);
     bookAppointmentMutate(appointmentData);
   };
+  const getSpecializationName = (id) => {
+    if (!specializationData || !specializationData.data || !id)
+      return "Unknown";
+    const specialization = specializationData?.data.find(
+      (spec) => spec.id.toString() === id
+    );
+    return specialization ? specialization.name : "Unknown Specialization";
+  };
+
 
   return (
     <>
@@ -101,7 +128,7 @@ function DocProfile() {
               <img
                 src={
                   doctor?.profile_picture
-                    ? `${BASE_URL}${doctor.profile_picture}`
+                    ? `${IMAGE_BASE_URL}${doctor.profile_picture}`
                     : "/public/doctorPic.jpg"
                 }
                 alt="Doctor"
@@ -123,7 +150,7 @@ function DocProfile() {
                 />
               </p>
               <div className="spec-exp">
-                <p style={{ margin: "0" }}>{doctor.Speciality}</p>
+                <p style={{ margin: "0" }}>{getSpecializationName(doctor.speciality_id)}</p>
                 <button>{doctor.experience} years</button>
               </div>
               <div className="docAbout">
@@ -143,14 +170,17 @@ function DocProfile() {
                   Appointment fee:NPR {doctor.fee}
                 </span>
               </div>
-              <div className="mt-4 text-l font-bold text-slate-500 flex items-center">
+              <div className="mt-4 text-l font-bold text-slate-500 flex items-center ">
                 <FaLocationDot className="text-2xl" />
+                <div className="w-[60%] ml-1">
                 {doctor.location_name}
+
+                </div>
                 {
                   isAuthenticated && (
                     <button
                     className="ml-auto flex justify-center items-center p-1 bg-white border-none hover:text-slate-600"
-                    onClick={() => favoriteMutate(doctor.id)} // Pass doctor ID
+                    onClick={() => favoriteMutate(doctorId)} // Pass doctor ID
                     disabled={isPending} // Disable button while adding
                   >
                     <MdFavorite className="text-xl" />{" "}
@@ -180,15 +210,19 @@ function DocProfile() {
                   </label>
                   {selectedDate === slot.date && (
                     <div className="time-slots">
-                      {slot.available_times?.map(({ id, time }) => (
+                      {slot.available_times?.map(({ id, time , booked }) => (
+
                         <label key={id}>
-                          <input
+                          
+                            <input
                             type="radio"
                             value={time}
                             {...register(`selectedTime`, { required: true })}
+                            disabled={booked}
                           />
-                          {time}
-                        </label>
+                          {time} {booked && "(Booked)"}
+                         
+                          </label>
                       ))}
                     </div>
                   )}
@@ -198,7 +232,7 @@ function DocProfile() {
             {errors.selectedDate && <p>Please select a date</p>}
             {errors.selectedTime && <p>Please select a time slot</p>}
             <div className="appointmentButton">
-              <button type="submit">Book appointment</button>
+              <button type="submit">{isBooking ? "Booking..." : "Book Now"}</button>
             </div>
           </form>
         </div>

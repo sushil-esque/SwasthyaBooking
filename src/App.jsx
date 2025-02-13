@@ -36,6 +36,7 @@ import Schedule from "./pages/Doctor/DoctorPages/Schedule";
 import RecomendedDoctors from "./pages/Recommended/RecomendedDoctors";
 import { Toaster } from "./components/ui/toaster";
 import Specializations from "./pages/Admin/AdminPages/Specializations";
+import ChangePasswordDoctor from "./pages/Doctor/DoctorPages/ChangePasswordDoctor";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -64,12 +65,11 @@ const router = createBrowserRouter(
           </Protected>
         }
       >
-        <Route index element={<DoctorHome />} />
-        <Route path="dashboard" element={<DoctorHome />} />
+        <Route index element={<DoctorAppointments />} />
         <Route path="appointments" element={<DoctorAppointments />} />
         <Route path="updateProfile" element={<UpdateProfile/>}/>
         <Route path="schedule" element={<Schedule/>} />
-        <Route path="changePassword" element={<ChangePassword/>}/>
+        <Route path="changePassword" element={<ChangePasswordDoctor/>}/>
       </Route>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />

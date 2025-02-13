@@ -15,18 +15,7 @@ function Sidebar({ openSidebarToggle }) {
         </div>
       </div>
       <ul className="sidebar-list">
-        <li
-          className={
-            openSidebarToggle
-              ? "sidebar-list-item"
-              : "collapsed-sidebar-list-item"
-          }
-        >
-          <NavLink to={"dashboard"}>
-            <BsGrid1X2Fill className="icon " />
-            {openSidebarToggle && <span>Dashboard</span>}
-          </NavLink>
-        </li>
+       
         <li
           className={
             openSidebarToggle

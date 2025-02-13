@@ -7,11 +7,13 @@ import { faHeart, faKey, faUserCog } from "@fortawesome/free-solid-svg-icons";
 
 function UserDashboard() {
   const [data, setData] = useState({});
+  const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
+
 
   async function fetchUser() {
     const token = localStorage.getItem("token");
     try {
-      const rawData = await fetch("http://127.0.0.1:8000/api/me", {
+      const rawData = await fetch("http://127.0.0.1:8000/api/user/me", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -37,7 +39,7 @@ function UserDashboard() {
       <div style={{display:"flex", flexDirection:"column", alignItems:"center", gap:"5px"}}>
       <div className="userMenuImageContainer">
         <img
-          src={data.image_url}
+          src={`${IMAGE_BASE_URL}${data.profile_picture}`}
           alt="UserProfilePic"
           
         />

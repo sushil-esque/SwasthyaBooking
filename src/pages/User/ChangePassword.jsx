@@ -14,16 +14,16 @@ function ChangePassword() {
   async function changePassword() {
     const token = localStorage.getItem("token");
     const passwordJson = {
-      current_password: currentPassword,
-      new_password: newPassword,
-      new_password_confirmation: confirmPassword,
+      // current_password: currentPassword,
+      password: newPassword,
+      password_confirmation: confirmPassword,
     };
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/change-password",
+        "http://127.0.0.1:8000/api/user/profileUpdate",
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -66,31 +66,6 @@ function ChangePassword() {
         }}
       >
         <h3>Change Password</h3>
-        <div className="form-field">
-          <label htmlFor="password">Current Password</label>
-          <div className="input-group">
-            <FontAwesomeIcon icon={faLock} className="input-icon" />
-            <input
-              type={passVis ? "text" : "password"}
-              value={currentPassword || ""}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              id="password"
-              placeholder="Old password"
-              className="input-field"
-            />
-            <button
-              onClick={showpw}
-              type="button"
-              className="show-password-btn"
-            >
-              {passVis ? (
-                <FontAwesomeIcon icon={faEye} />
-              ) : (
-                <FontAwesomeIcon icon={faEyeSlash} />
-              )}
-            </button>
-          </div>
-        </div>
 
         <div className="form-field">
           <label htmlFor="newpassword">New Password</label>

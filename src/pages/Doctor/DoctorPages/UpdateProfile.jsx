@@ -1,19 +1,30 @@
 import { useQuery } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { getMe } from "../../../api/user";
+import { set, useForm } from "react-hook-form";
 import Loader from "../../../components/Loader";
 import { useEffect, useState } from "react";
-import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  Marker,
+  Popup,
+  TileLayer,
+  useMapEvents,
+} from "react-leaflet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMap } from "@fortawesome/free-solid-svg-icons";
+import { getDoctorMe } from "@/api/doctor";
+import UpdateMapCenter from "@/components/UpdateMapCenter";
 
 function UpdateProfile() {
+  const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
+  const token = localStorage.getItem("token");
+
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
-
+  const [isUpdating, setUpdating] = useState(false);
   const [profilePic, setProfilePic] = useState(null); // State for the selected profile picture file
   const [profilePicUrl, setProfilePicUrl] = useState(""); // State for the profile picture URL
   const [availability, setAvailability] = useState([]); // State for availability data
@@ -22,9 +33,24 @@ function UpdateProfile() {
   const [searchQuery, setSearchQuery] = useState(""); // Stores search input
   const [searchResults, setSearchResults] = useState([]); // Stores search results
 
+  const fetchSpecialities = async () => {
+    const response = await fetch(`${BASE_URL}speciality?active=true`);
+    if (!response.ok) throw new Error("Error fetching specialities");
+    return response.json();
+  };
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["fetchDocProfile"],
-    queryFn: getMe,
+    queryFn: getDoctorMe,
+    retry: 3,
+  });
+  const {
+    data: specializationData,
+    isLoading: specializationLoading,
+    isSuccess,
+  } = useQuery({
+    queryKey: ["specializations"],
+    queryFn: fetchSpecialities,
     retry: 3,
   });
 
@@ -37,13 +63,20 @@ function UpdateProfile() {
       // Set the availability data from the API response
       setAvailability(data.availability);
     }
-    if (data?.location) {
+    if (data?.location_name) {
       // Set the initial location from the API response
-      setLocation(data.location);
       setLocationName(data.location_name || "");
       setSearchQuery(data.location_name || "");
     }
+    if (data?.longitude && data?.latitude) {
+      console.log(data.longitude, data.latitude);
+      setLocation({
+        lat: parseFloat(data.latitude),
+        lng: parseFloat(data.longitude),
+      });
+    }
   }, [data]);
+  if (isLoading || specializationLoading) return <Loader />;
 
   const handleProfilePicChange = (e) => {
     const file = e.target.files[0];
@@ -111,54 +144,63 @@ function UpdateProfile() {
     ) : null;
   }
 
-  const addAvailability = () => {
-    // Add a new availability object with an empty date and times array
-    setAvailability([...availability, { date: "", times: [""] }]);
-  };
-
-  const removeAvailability = (index) => {
-    const updatedAvailability = availability.filter((_, i) => i !== index);
-    setAvailability(updatedAvailability);
-  };
-
-  const handleDateChange = (index, value) => {
-    const updatedAvailability = [...availability];
-    updatedAvailability[index].date = value;
-    setAvailability(updatedAvailability);
-  };
-
-  const handleTimeChange = (availabilityIndex, timeIndex, value) => {
-    const updatedAvailability = [...availability];
-    updatedAvailability[availabilityIndex].times[timeIndex] = value;
-    setAvailability(updatedAvailability);
-  };
-
-  const addTimeSlot = (availabilityIndex) => {
-    const updatedAvailability = [...availability];
-    updatedAvailability[availabilityIndex].times.push("");
-    setAvailability(updatedAvailability);
-  };
-
-  const removeTimeSlot = (availabilityIndex, timeIndex) => {
-    const updatedAvailability = [...availability];
-    updatedAvailability[availabilityIndex].times = updatedAvailability[
-      availabilityIndex
-    ].times.filter((_, i) => i !== timeIndex);
-    setAvailability(updatedAvailability);
-  };
-
-  const onSubmit = (formData) => {
+  const onSubmit = async (formValues) => {
     const updatedData = {
-      ...formData,
-      availability, // Send the availability data to the backend
-      profile_picture: profilePic, // Send the selected profile picture file
-      location, // Send the selected location coordinates
+      ...formValues,
+      speciality_id: Number(formValues.speciality_id),
+      longitude: location.lng.toString(), // Send the selected location coordinates, // Send the selected location coordinates
+      latitude: location.lat.toString(),
       location_name: locationName, // Send the selected location name
     };
     console.log(updatedData); // Send this data to your backend
+    try {
+      const response = await fetch(`${BASE_URL}doctor/profileUpdate`, {
+        method: "put",
+        headers: {
+          
+          "content-type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error updating profile");
+      }
+      if (profilePic) {
+        const formData = new FormData();
+
+        formData.append("profile_picture", profilePic);
+        const profileResponse = await fetch(
+          "http://127.0.0.1:8000/api/doctor/imageUpdate",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          }
+        );
+
+        if (!profileResponse.ok) {
+          const errorData = await profileResponse.json();
+          throw new Error(errorData.message || "Error uploading profile image");
+        }
+      }
+
+      setUpdating(true);
+
+      alert("Profile updated successfully");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+
+      alert("Failed to update profile");
+    } finally {
+      setUpdating(false);
+    }
   };
 
-  if (isLoading) {
+  if (isLoading || isUpdating) {
     return <Loader />;
   }
   if (isError) {
@@ -181,7 +223,7 @@ function UpdateProfile() {
                     <img
                       src={
                         profilePicUrl ||
-                        data?.image_url ||
+                        `${IMAGE_BASE_URL}${data?.profile_picture}` ||
                         "https://i.pravatar.cc/300"
                       } // Use the current profile picture URL or a fallback
                       alt="Profile Picture"
@@ -262,14 +304,21 @@ function UpdateProfile() {
                       ))}
                     </ul>
                   )}
-                  <div style={{ height: "300px", width: "100%", marginBottom: "20px" }}>
+                  <div
+                    style={{
+                      height: "300px",
+                      width: "100%",
+                      marginBottom: "20px",
+                    }}
+                  >
                     <MapContainer
-                      center={[27.7172, 85.324]}
+                      center={location ? location : [27.7172, 85.324]}
                       zoom={13}
                       style={{ height: "100%", width: "100%" }}
                     >
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                       <LocationMarker />
+                      <UpdateMapCenter location={location} />
                     </MapContainer>
                   </div>
                 </div>
@@ -320,27 +369,19 @@ function UpdateProfile() {
                   </label>
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                    defaultValue={data?.specialization}
-                    {...register("specialization")}
+                    defaultValue={data?.speciality_id || ""}
+                    {...register("speciality_id")}
                   >
-                    <option value="Orthopedics">Orthopedics</option>
-                    <option value="Neurology">Neurology</option>
-                    <option value="Dermatology">Dermatology</option>
-                    <option value="Pediatrics">Pediatrics</option>
-                    <option value="Cardiology">Cardiology</option>
-                    <option value="Gynecology">Gynecology</option>
-                    <option value="Ophthalmology">Ophthalmology</option>
-                    <option value="Psychiatry">Psychiatry</option>
-                    <option value="Radiology">Radiology</option>
-                    <option value="Urology">Urology</option>
-                    <option value="Oncology">Oncology</option>
-                    <option value="ENT">ENT</option>
-                    <option value="Gastroenterology">Gastroenterology</option>
-                    <option value="Nephrology">Nephrology</option>
-                    <option value="Hematology">Hematology</option>
-                    <option value="Anesthesiology">Anesthesiology</option>
-                    <option value="General">General</option>
-                    <option value="Pulmonology">Pulmonology</option>
+                    <option value="" disabled>
+                      Select a specialization
+                    </option>
+
+                    {console.log(specializationData.data)}
+                    {specializationData?.data.map((spec, id) => (
+                      <option value={spec.id} key={id}>
+                        {spec.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -353,8 +394,8 @@ function UpdateProfile() {
                     <input
                       type="number"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                      defaultValue={data?.price}
-                      {...register("price")}
+                      defaultValue={data?.fee}
+                      {...register("fee")}
                     />
                   </div>
                   <div className="w-1/3">
@@ -368,88 +409,6 @@ function UpdateProfile() {
                       {...register("experience")}
                     />
                   </div>
-                </div>
-
-                {/* Availability */}
-                <div className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Availability
-                  </label>
-                  {availability.map((availabilityItem, availabilityIndex) => (
-                    <div key={availabilityIndex} className="space-y-4">
-                      <div className="flex flex-wrap gap-4 items-end">
-                        <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Date
-                          </label>
-                          <input
-                            type="date"
-                            value={availabilityItem.date}
-                            onChange={(e) =>
-                              handleDateChange(availabilityIndex, e.target.value)
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeAvailability(availabilityIndex)}
-                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                        >
-                          Remove Availability
-                        </button>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                          Time Slots
-                        </label>
-                        {availabilityItem.times.map((time, timeIndex) => (
-                          <div
-                            key={timeIndex}
-                            className="flex flex-wrap gap-4 items-end"
-                          >
-                            <div className="flex-1">
-                              <input
-                                type="time"
-                                value={time}
-                                onChange={(e) =>
-                                  handleTimeChange(
-                                    availabilityIndex,
-                                    timeIndex,
-                                    e.target.value
-                                  )
-                                }
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                removeTimeSlot(availabilityIndex, timeIndex)
-                              }
-                              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                            >
-                              Remove Time
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => addTimeSlot(availabilityIndex)}
-                          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                        >
-                          Add Time Slot
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={addAvailability}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                  >
-                    Add Availability
-                  </button>
                 </div>
 
                 {/* Save and Cancel Buttons */}

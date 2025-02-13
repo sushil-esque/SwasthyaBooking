@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FaCheck } from "react-icons/fa6";
 import { GiCancel } from "react-icons/gi";
+import { Loader } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -14,21 +15,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
-import Loader from "@/components/Loader";
 
-function DoctorAppointments() {
+function Appointments() {
   const { data: appointmentData, isLoading } = useQuery({
     queryKey: ["doctorAppointments"],
-    queryFn: getDoctorAppointments,
+    queryFn: showapp,
     retry: 3,
   });
 
-  const { mutate: statusMutate } = useMutation({
+  const { mutate: acceptMutate } = useMutation({
     mutationFn: updateAppointment,
     onSuccess: () => {
       toast({
-        title: "Appointment updated successfully",
+        title: "Appointment accepted successfully",
         variant: "default",
       });
     },
@@ -43,10 +42,7 @@ function DoctorAppointments() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
-  const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
-  const [newDate, setNewDate] = useState("");
-  const [newTime, setNewTime] = useState("");
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
+
   if (isLoading) {
     return <Loader />;
   }
@@ -122,10 +118,10 @@ function DoctorAppointments() {
 
   const handleShowPatientDetails = (appointment) => {
     setSelectedPatient({
-      name: appointment.user.name,
-      location: appointment.user.location_name,
-      email: appointment.user.email,
-      phone: appointment.user.phone_number,
+      name: appointment.patient_name,
+      location: appointment.location,
+      email: appointment.patient_email,
+      phone: appointment.patient_phone,
     });
     setIsDialogOpen(true);
   };
@@ -142,66 +138,16 @@ function DoctorAppointments() {
     };
     console.log("Accept Data:", acceptData);
 
-    statusMutate(acceptData);
+    acceptMutate(acceptData);
   };
 
-  const handleReject = (appointment) => {
-    const acceptData = {
-      id: appointment.id,
-      doctor_id: appointment.doctor_id, // Ensure this field is included
-      date: appointment.date, // Ensure this field is included
-      time: appointment.time, // Ensure this field is included
-      status: "cancelled", // Update the status
-    };
-    console.log("Accept Data:", acceptData);
-
-    statusMutate(acceptData);
-  };
-
-  const handleReschedule = (appointment) => {
-    setSelectedAppointment(appointment);
-    setIsRescheduleDialogOpen(true);
-  };
-  const handleRescheduleSubmit = () => {
-    if (!newDate || !newTime) {
-      toast({
-        title: "Please provide a new date and time",
-        variant: "destructive",
-      });
-      return;
-    }
-    function convertTo12Hour(time) {
-      const [hours, minutes] = time.split(":");
-      const h = parseInt(hours, 10);
-      const ampm = h >= 12 ? "PM" : "AM";
-      const convertedHours = h % 12 || 12; // Convert 0 to 12 for midnight
-      return `${convertedHours}:${minutes} ${ampm}`;
-    }
-
-    const rescheduleData = {
-
-      id: selectedAppointment.id,
-      doctor_id: selectedAppointment.doctor_id,
-      date: newDate,
-      time: convertTo12Hour(newTime),
-      status: "rescheduled",
-    };
- 
-    // const formattedAvailability = rescheduleData.map((item) => ({
-    //   date: item.date,
-    //   times: item.time.map((time) => convertTo12Hour(time)), // Convert each time to 12-hour format
-    // }));
-
-    statusMutate(rescheduleData);
-    setIsRescheduleDialogOpen(false);
-    setNewDate("");
-    setNewTime("");
+  const handleReject = (id) => {
+    console.log(`Rejecting appointment with ID: ${id}`);
+    // Add logic for rejecting the appointment
   };
 
   return (
-    <>
-     {appointmentData && (
-      <div>
+    <div>
       {/* Patient Details Dialog */}
       {selectedPatient && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -209,58 +155,15 @@ function DoctorAppointments() {
             <DialogHeader>
               <DialogTitle>Patient Details</DialogTitle>
               <DialogDescription>
-                <p>
-                  <span className=" text-black">Name: </span>{" "}
-                  {selectedPatient.name}
-                </p>
-                <p>
-                  <span className="text-black">Location: </span>{" "}
-                  {selectedPatient.location}
-                </p>
-                <p>
-                  <span className="text-black">Email: </span>
-                  {selectedPatient.email}
-                </p>
-                <p>
-                  <span className="text-black">Phone: </span>{" "}
-                  {selectedPatient.phone}
-                </p>
+                <p>Name: {selectedPatient.name}</p>
+                <p>Location: {selectedPatient.location}</p>
+                <p>Email: {selectedPatient.email}</p>
+                <p>Phone: {selectedPatient.phone}</p>
               </DialogDescription>
             </DialogHeader>
           </DialogContent>
         </Dialog>
       )}
-      {/* Reschedule Dialog */}
-      <Dialog
-        open={isRescheduleDialogOpen}
-        onOpenChange={setIsRescheduleDialogOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reschedule Appointment</DialogTitle>
-            <DialogDescription>
-              <div className="space-y-4">
-                <Input
-                  type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                  placeholder="Select new date"
-                  className="w-[80%]"
-                />
-                <Input
-                  type="time"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                  placeholder="Select new time"
-                  className="w-[80%]"
-
-                />
-                <Button onClick={handleRescheduleSubmit}>Submit</Button>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
 
       <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table className="w-full text-sm text-left rtl:text-right text-gray-500">
@@ -285,19 +188,26 @@ function DoctorAppointments() {
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("name")}
+                onClick={() => requestSort("appointment_id")}
               >
                 Patient name
-                <SortArrows columnKey="name" />
+                <SortArrows columnKey="appointment_id" />
               </th>
-              
               <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("status")}
+                onClick={() => requestSort("amount")}
+              >
+                Amount
+                <SortArrows columnKey="amount" />
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 cursor-pointer"
+                onClick={() => requestSort("appointment_status")}
               >
                 Appointment Status
-                <SortArrows columnKey="status" />
+                <SortArrows columnKey="appointment_status" />
               </th>
               <th scope="col" className="px-6 py-3">
                 Change Status
@@ -321,19 +231,20 @@ function DoctorAppointments() {
                   className="px-6 py-4 cursor-pointer text-blue-500 hover:underline"
                   onClick={() => handleShowPatientDetails(appointment)}
                 >
-                  {appointment.user?.name ? appointment.user.name : "Unknown"}
+                  {appointment.user_id}
                 </td>
 
+                <td className="px-6 py-4">${appointment.amount}</td>
                 <td className="px-6 py-4">{appointment.status}</td>
                 <td className="px-6 py-4 text-right flex gap-2">
                   {/* Show Completed Badge only if status is "completed" */}
                   {appointment.status === "rescheduled" && (
-                    <Badge variant="secondary">Accepted</Badge>
+                    <Badge variant="secondary">rescheduled</Badge>
                   )}
                   {appointment.status === "confirmed" && (
                     <Badge variant="secondary">Accepted</Badge>
                   )}
-                  {appointment.status === "cancelled" && (
+                  {appointment.appointment_status === "cancelled" && (
                     <Badge variant="secondary">cancelled</Badge>
                   )}
 
@@ -348,16 +259,9 @@ function DoctorAppointments() {
                       </Button>
                       <Button
                         variant="destructive"
-                        onClick={() => handleReject(appointment)}
+                        onClick={() => handleReject(appointment.id)}
                       >
                         <GiCancel />
-                      </Button>
-                      <Button
-                        variant="default"
-                        className="bg-green-600 hover:bg-green-500"
-                        onClick={() => handleReschedule(appointment)}
-                      >
-                        Reschedule
                       </Button>
                     </>
                   )}
@@ -368,11 +272,7 @@ function DoctorAppointments() {
         </table>
       </div>
     </div>
-    )}
-    </>
-   
-   
   );
 }
 
-export default DoctorAppointments;
+export default Appointments;

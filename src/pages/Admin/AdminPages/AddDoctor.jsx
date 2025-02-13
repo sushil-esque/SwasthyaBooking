@@ -5,23 +5,36 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { FaUserDoctor } from "react-icons/fa6";
-import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  Marker,
+  Popup,
+  TileLayer,
+  useMapEvents,
+} from "react-leaflet";
 
 function AddDoctor() {
   const fields = "flex flex-col gap-2 w-80"; // Shared styles for field container
   const inputFields = "outline-none h-5 border rounded px-2"; // Shared styles for inputs
-  const { data: specialitiesData, isLoading, isSuccess } = useQuery({
+  const {
+    data: specialitiesData,
+    isLoading,
+    isSuccess,
+  } = useQuery({
     queryKey: ["specialities"],
     queryFn: showSpecialities,
     retry: 3,
   });
 
   isSuccess && console.log(specialitiesData?.data);
+  const [profileImage, setProfileImage] = useState(null);
 
   const [location, setLocation] = useState(null); // Stores coordinates
   const [locationName, setLocationName] = useState(""); // Stores location name
   const [searchQuery, setSearchQuery] = useState(""); // Stores search input
   const [searchResults, setSearchResults] = useState([]); // Stores search results
+  const [availability, setAvailability] = useState([]); // State for availability data
+
   const [formValues, setFormValues] = useState({
     name: "",
     speciality_id: "",
@@ -34,22 +47,12 @@ function AddDoctor() {
     longitude: "",
     latitude: "",
     location_name: "",
-    profile_picture: "",
+    profile_picture: null,
     gender: "",
     date_of_birth: "",
     phone_number: "",
-    location: "",
     status: "active",
-    availability: [
-      {
-        date: "2025-02-10",
-        times: ["09:00 AM", "02:00 PM"]
-      },
-      {
-        date: "2025-02-11",
-        times: ["10:00 AM", "03:00 PM"]
-      }
-    ],
+    availability: [],
   });
 
   const fetchLocationName = async (lat, lng) => {
@@ -98,11 +101,12 @@ function AddDoctor() {
     setSearchResults([]);
     setFormValues((prev) => ({
       ...prev,
-      locationName: name,
-      latitude: lat,
-      longitude: lon,
+      location_name: name,
+      latitude: lat.toString(),
+      longitude: lon.toString(),
     }));
   };
+  console.log(location?.lng.toString());
 
   function LocationMarker() {
     useMapEvents({
@@ -140,38 +144,55 @@ function AddDoctor() {
       return;
     }
     setFormValues({ ...formValues, profile_picture: file });
+    setProfileImage(URL.createObjectURL(file));
   };
-  
+  console.log("Form data:", formValues);
   const submit = async () => {
-    const formData = new FormData();
-    Object.entries(formValues).forEach(([key, value]) => {
-      if (key !== "availability") {
-        formData.append(key, value);
-    }
-    });
-    
-  // Append availability properly (each date separately)
-  formValues.availability.forEach((slot, index) => {
-    formData.append(`availability[${index}][date]`, slot.date);
-    slot.times.forEach((time, timeIndex) => {
-        formData.append(`availability[${index}][times][${timeIndex}]`, time);
-    });
-});
-console.log("FormData contents:");
-for (let pair of formData.entries()) {
-    console.log(pair[0], pair[1]);
-}
+    //except availability
+    // Object.entries(formValues).forEach(([key, value]) => {
+    //   if (key !== "availability") {
+    //     formData.append(key, value);
+    //   }
+    // });
+
+    // Append availability properly (each date separately)
+    // formValues.availability.forEach((slot, index) => {
+    //   formData.append(`availability[${index}][date]`, slot.date);
+    //   slot.times.forEach((time, timeIndex) => {
+    //     formData.append(`availability[${index}][times][${timeIndex}]`, time);
+    //   });
+    // });
+
+    const availabilityJson = JSON.stringify(availability);
+    console.log("availability json", availabilityJson);
+    console.log("Availability before submit: ", availability);
+    // formData.append("availability", availabilityJson);
+    // for (let pair of formData.entries()) {
+    //   console.log(pair[0], pair[1]);
+    // }
+    const payload = {
+      ...formValues,
+      longitude: formValues.longitude.toString(), // Ensure longitude is a string
+      latitude: formValues.latitude.toString(), // Ensure latitude is a string
+      speciality_id: Number(formValues.speciality_id), // Ensure speciality_id is a number
+      experience: Number(formValues.experience),
+      // availability: JSON.stringify(availability), // Serialize availability as JSON
+      profileImage: null,
+      availability: availability,
+    };
+
+    console.log("Payload:", payload);
 
     try {
       const response = await fetch("http://127.0.0.1:8000/api/admin/doctor", {
         method: "POST",
-        body: formData,
+        body: JSON.stringify(payload),
         headers: {
-          
+          "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      const responseData = await response.json(); // Parse response as JSON
+      const responseData = await response.json();
       console.log(response);
       if (!response.ok) {
         if (response.status === 422) {
@@ -201,18 +222,10 @@ for (let pair of formData.entries()) {
         date_of_birth: "",
         phone_number: "",
         location: "",
-        availability: [
-          {
-            date: "2025-02-10",
-            times: ["09:00 AM", "02:00 PM"]
-          },
-          {
-            date: "2025-02-11",
-            times: ["10:00 AM", "03:00 PM"]
-          }
-        ],
+        availability: [],
         status: "active",
       });
+      setAvailability([]);
       setIsError(false);
       setErrorMessage([]);
     } catch (error) {
@@ -220,6 +233,49 @@ for (let pair of formData.entries()) {
       alert("Error registering user. Please try again.");
     }
   };
+
+  const addAvailability = () => {
+    // Add a new availability object with an empty date and times array
+    setAvailability([...availability, { date: "", times: [""] }]);
+  };
+
+  const removeAvailability = (index) => {
+    const updatedAvailability = availability.filter((_, i) => i !== index);
+    setAvailability(updatedAvailability);
+  };
+
+  const handleDateChange = (index, value) => {
+    const updatedAvailability = [...availability];
+    updatedAvailability[index].date = value;
+    setAvailability(updatedAvailability);
+  };
+
+  const handleTimeChange = (availabilityIndex, timeIndex, value) => {
+    const updatedAvailability = [...availability];
+    updatedAvailability[availabilityIndex].times[timeIndex] = value;
+    setAvailability(updatedAvailability);
+  };
+
+  const addTimeSlot = (availabilityIndex) => {
+    const updatedAvailability = [...availability];
+    updatedAvailability[availabilityIndex].times.push("");
+    setAvailability(updatedAvailability);
+  };
+
+  const removeTimeSlot = (availabilityIndex, timeIndex) => {
+    const updatedAvailability = [...availability];
+    updatedAvailability[availabilityIndex].times = updatedAvailability[
+      availabilityIndex
+    ].times.filter((_, i) => i !== timeIndex);
+    setAvailability(updatedAvailability);
+  };
+  function convertTo12Hour(time) {
+    const [hours, minutes] = time.split(":");
+    const h = parseInt(hours, 10);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const convertedHours = h % 12 || 12; // Convert 0 to 12 for midnight
+    return `${convertedHours}:${minutes} ${ampm}`;
+  }
 
   return (
     <div className="flex justify-start py-10 lg:px-40 sm:px-5 md:px-20 text-black bg-white">
@@ -243,8 +299,16 @@ for (let pair of formData.entries()) {
         {/* Profile Picture */}
         <div className="w-full flex flex-col gap-3">
           <div className="flex items-center justify-center h-28 w-28 border-4 border-black rounded-full bg-gray-100">
-            <FaUserDoctor className="h-16 w-16 text-zinc-500" />
+            {profileImage ? (
+              <img
+                src={profileImage}
+                className="h-full w-full border-4 border-black rounded-full object-cover"
+              />
+            ) : (
+              <FaUserDoctor className="h-16 w-16 text-zinc-500" />
+            )}
           </div>
+
           <label htmlFor="profilePicture">Profile picture</label>
           <input
             type="file"
@@ -308,7 +372,7 @@ for (let pair of formData.entries()) {
         {/* Location */}
         <div className={fields}>
           <label htmlFor="location">Location</label>
-          <div className="user">
+          <div className="w-full   rounded-md  flex items-center">
             <FontAwesomeIcon icon={faMap} />
             <input
               type="text"
@@ -316,15 +380,32 @@ for (let pair of formData.entries()) {
               onChange={handleSearch}
               id="location"
               placeholder="Search for a location..."
+              className="w-full outline-none border-none"
             />
           </div>
           {searchResults.length > 0 && (
-            <ul style={{ listStyle: "none", padding: 0, border: "1px solid #ccc" }}>
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                border: "1px solid #ccc",
+              }}
+            >
               {searchResults.map((result, index) => (
                 <li
                   key={index}
-                  style={{ padding: "5px", cursor: "pointer", borderBottom: "1px solid #ddd" }}
-                  onClick={() => handleSearchSelect(result.lat, result.lon, result.display_name)}
+                  style={{
+                    padding: "5px",
+                    cursor: "pointer",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                  onClick={() =>
+                    handleSearchSelect(
+                      result.lat,
+                      result.lon,
+                      result.display_name
+                    )
+                  }
                 >
                   {result.display_name}
                 </li>
@@ -336,7 +417,11 @@ for (let pair of formData.entries()) {
 
         {/* Map Container */}
         <div style={{ height: "300px", width: "100%", marginBottom: "20px" }}>
-          <MapContainer center={[27.7172, 85.324]} zoom={13} style={{ height: "100%", width: "100%" }}>
+          <MapContainer
+            center={[27.7172, 85.324]}
+            zoom={13}
+            style={{ height: "100%", width: "100%" }}
+          >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <LocationMarker />
           </MapContainer>
@@ -403,13 +488,13 @@ for (let pair of formData.entries()) {
         </div>
 
         {/* Bio */}
-        <div className={fields}>
+        <div className="flex flex-col flex-shrink w-[77%]">
           <label htmlFor="bio">Bio</label>
           <textarea
             name="bio"
             id="bio"
             placeholder="Enter bio"
-            className={`${inputFields} h-10 resize-none`}
+            className={`w-full h-20 resize-none outline-none border px-2 rounded`}
             value={formValues.bio}
             onChange={handleInputChange}
           ></textarea>
@@ -494,6 +579,85 @@ for (let pair of formData.entries()) {
               )}
             </button>
           </div>
+        </div>
+        {/* Availability */}
+        <div className={fields}>
+          <label>Availability</label>
+          {availability.map((availabilityItem, availabilityIndex) => (
+            <div key={availabilityIndex} className="space-y-4">
+              <div className="flex flex-wrap gap-5 items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={availabilityItem.date}
+                    onChange={(e) =>
+                      handleDateChange(availabilityIndex, e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeAvailability(availabilityIndex)}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 ml-3"
+                >
+                  Remove Availability
+                </button>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Time Slots
+                </label>
+                {availabilityItem.times.map((time, timeIndex) => (
+                  <div
+                    key={timeIndex}
+                    className="flex flex-wrap gap-4 items-end"
+                  >
+                    <div className="flex-1">
+                      <input
+                        type="time"
+                        value={time}
+                        onChange={(e) =>
+                          handleTimeChange(
+                            availabilityIndex,
+                            timeIndex,
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        removeTimeSlot(availabilityIndex, timeIndex)
+                      }
+                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 ml-3"
+                    >
+                      Remove Time
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => addTimeSlot(availabilityIndex)}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                >
+                  Add Time Slot
+                </button>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addAvailability}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            Add Availability
+          </button>
         </div>
 
         {/* Submit Button */}
