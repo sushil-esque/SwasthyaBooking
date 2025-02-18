@@ -24,7 +24,7 @@ function DoctorAppointments() {
     retry: 3,
   });
 
-  const { mutate: statusMutate } = useMutation({
+  const { mutate: statusMutate, isPending: statusPending } = useMutation({
     mutationFn: updateAppointment,
     onSuccess: () => {
       toast({
@@ -48,6 +48,9 @@ function DoctorAppointments() {
   const [newTime, setNewTime] = useState("");
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   if (isLoading) {
+    return <Loader />;
+  }
+  if (statusPending) {
     return <Loader />;
   }
 
@@ -179,14 +182,13 @@ function DoctorAppointments() {
     }
 
     const rescheduleData = {
-
       id: selectedAppointment.id,
       doctor_id: selectedAppointment.doctor_id,
       date: newDate,
       time: convertTo12Hour(newTime),
       status: "rescheduled",
     };
- 
+
     // const formattedAvailability = rescheduleData.map((item) => ({
     //   date: item.date,
     //   times: item.time.map((time) => convertTo12Hour(time)), // Convert each time to 12-hour format
@@ -200,178 +202,177 @@ function DoctorAppointments() {
 
   return (
     <>
-     {appointmentData && (
-      <div>
-      {/* Patient Details Dialog */}
-      {selectedPatient && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Patient Details</DialogTitle>
-              <DialogDescription>
-                <p>
-                  <span className=" text-black">Name: </span>{" "}
-                  {selectedPatient.name}
-                </p>
-                <p>
-                  <span className="text-black">Location: </span>{" "}
-                  {selectedPatient.location}
-                </p>
-                <p>
-                  <span className="text-black">Email: </span>
-                  {selectedPatient.email}
-                </p>
-                <p>
-                  <span className="text-black">Phone: </span>{" "}
-                  {selectedPatient.phone}
-                </p>
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
+      {appointmentData && (
+        <div>
+          {/* Patient Details Dialog */}
+          {selectedPatient && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Patient Details</DialogTitle>
+                  <DialogDescription>
+                    <p>
+                      <span className=" text-black">Name: </span>{" "}
+                      {selectedPatient.name}
+                    </p>
+                    <p>
+                      <span className="text-black">Location: </span>{" "}
+                      {selectedPatient.location}
+                    </p>
+                    <p>
+                      <span className="text-black">Email: </span>
+                      {selectedPatient.email}
+                    </p>
+                    <p>
+                      <span className="text-black">Phone: </span>{" "}
+                      {selectedPatient.phone}
+                    </p>
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          )}
+          {/* Reschedule Dialog */}
+          <Dialog
+            open={isRescheduleDialogOpen}
+            onOpenChange={setIsRescheduleDialogOpen}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Reschedule Appointment</DialogTitle>
+                <DialogDescription>
+                  <div className="space-y-4">
+                    <Input
+                      type="date"
+                      value={newDate}
+                      onChange={(e) => setNewDate(e.target.value)}
+                      placeholder="Select new date"
+                      className="w-[80%]"
+                    />
+                    <Input
+                      type="time"
+                      value={newTime}
+                      onChange={(e) => setNewTime(e.target.value)}
+                      placeholder="Select new time"
+                      className="w-[80%]"
+                    />
+                    <Button onClick={handleRescheduleSubmit}>Submit</Button>
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+
+          <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <table className="w-full text-sm text-left rtl:text-right text-gray-500">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 cursor-pointer"
+                    onClick={() => requestSort("id")}
+                  >
+                    Appointment ID
+                    <SortArrows columnKey="id" />
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 cursor-pointer"
+                    onClick={() => requestSort("date")}
+                  >
+                    Appointment Date & Time
+                    <SortArrows columnKey="date" />
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 cursor-pointer"
+                    onClick={() => requestSort("name")}
+                  >
+                    Patient name
+                    <SortArrows columnKey="name" />
+                  </th>
+
+                  <th
+                    scope="col"
+                    className="px-6 py-3 cursor-pointer"
+                    onClick={() => requestSort("status")}
+                  >
+                    Appointment Status
+                    <SortArrows columnKey="status" />
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Change Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {finalData?.map((appointment) => (
+                  <tr key={appointment.id} className="bg-white border-b">
+                    <th
+                      scope="row"
+                      className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
+                    >
+                      {appointment.id}
+                    </th>
+                    <td className="px-6 py-4">
+                      <div>{appointment.date}</div>
+                      <div className="text-gray-500">{appointment.time}</div>
+                    </td>
+                    <td
+                      className="px-6 py-4 cursor-pointer text-blue-500 hover:underline"
+                      onClick={() => handleShowPatientDetails(appointment)}
+                    >
+                      {appointment.user?.name
+                        ? appointment.user.name
+                        : "Unknown"}
+                    </td>
+
+                    <td className="px-6 py-4">{appointment.status}</td>
+                    <td className="px-6 py-4 text-right flex gap-2">
+                      {/* Show Completed Badge only if status is "completed" */}
+                      {appointment.status === "rescheduled" && (
+                        <Badge variant="secondary">Accepted</Badge>
+                      )}
+                      {appointment.status === "confirmed" && (
+                        <Badge variant="secondary">Accepted</Badge>
+                      )}
+                      {appointment.status === "cancelled" && (
+                        <Badge variant="secondary">cancelled</Badge>
+                      )}
+
+                      {/* Show Accept and Reject buttons only if status is "pending" */}
+                      {appointment.status === "pending" && (
+                        <>
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleAccept(appointment)}
+                          >
+                            <FaCheck />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => handleReject(appointment)}
+                          >
+                            <GiCancel />
+                          </Button>
+                          <Button
+                            variant="default"
+                            className="bg-green-600 hover:bg-green-500"
+                            onClick={() => handleReschedule(appointment)}
+                          >
+                            Reschedule
+                          </Button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
-      {/* Reschedule Dialog */}
-      <Dialog
-        open={isRescheduleDialogOpen}
-        onOpenChange={setIsRescheduleDialogOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reschedule Appointment</DialogTitle>
-            <DialogDescription>
-              <div className="space-y-4">
-                <Input
-                  type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                  placeholder="Select new date"
-                  className="w-[80%]"
-                />
-                <Input
-                  type="time"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                  placeholder="Select new time"
-                  className="w-[80%]"
-
-                />
-                <Button onClick={handleRescheduleSubmit}>Submit</Button>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-
-      <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-        <table className="w-full text-sm text-left rtl:text-right text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("id")}
-              >
-                Appointment ID
-                <SortArrows columnKey="id" />
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("date")}
-              >
-                Appointment Date & Time
-                <SortArrows columnKey="date" />
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("name")}
-              >
-                Patient name
-                <SortArrows columnKey="name" />
-              </th>
-              
-              <th
-                scope="col"
-                className="px-6 py-3 cursor-pointer"
-                onClick={() => requestSort("status")}
-              >
-                Appointment Status
-                <SortArrows columnKey="status" />
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Change Status
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {finalData?.map((appointment) => (
-              <tr key={appointment.id} className="bg-white border-b">
-                <th
-                  scope="row"
-                  className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
-                >
-                  {appointment.id}
-                </th>
-                <td className="px-6 py-4">
-                  <div>{appointment.date}</div>
-                  <div className="text-gray-500">{appointment.time}</div>
-                </td>
-                <td
-                  className="px-6 py-4 cursor-pointer text-blue-500 hover:underline"
-                  onClick={() => handleShowPatientDetails(appointment)}
-                >
-                  {appointment.user?.name ? appointment.user.name : "Unknown"}
-                </td>
-
-                <td className="px-6 py-4">{appointment.status}</td>
-                <td className="px-6 py-4 text-right flex gap-2">
-                  {/* Show Completed Badge only if status is "completed" */}
-                  {appointment.status === "rescheduled" && (
-                    <Badge variant="secondary">Accepted</Badge>
-                  )}
-                  {appointment.status === "confirmed" && (
-                    <Badge variant="secondary">Accepted</Badge>
-                  )}
-                  {appointment.status === "cancelled" && (
-                    <Badge variant="secondary">cancelled</Badge>
-                  )}
-
-                  {/* Show Accept and Reject buttons only if status is "pending" */}
-                  {appointment.status === "pending" && (
-                    <>
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleAccept(appointment)}
-                      >
-                        <FaCheck />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => handleReject(appointment)}
-                      >
-                        <GiCancel />
-                      </Button>
-                      <Button
-                        variant="default"
-                        className="bg-green-600 hover:bg-green-500"
-                        onClick={() => handleReschedule(appointment)}
-                      >
-                        Reschedule
-                      </Button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    )}
     </>
-   
-   
   );
 }
 

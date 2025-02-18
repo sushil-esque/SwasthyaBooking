@@ -21,7 +21,7 @@ async function getDoctors() {
 }
 
 async function getPatients() {
-  return await axiosWithAuth.get(`${BASE_URL}patients`);
+  return await axiosWithAuth.get(`${BASE_URL}admin/customer`);
 }
 
 async function addFavorite(id) {

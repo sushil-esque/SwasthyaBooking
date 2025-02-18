@@ -7,14 +7,14 @@ import {
 } from "react-icons/bs";
 import "./admin.css";
 import { useNavigate } from "react-router-dom";
-function AdminHeader({toggleSidebar}) {
+function AdminHeader({ toggleSidebar }) {
   const navigate = useNavigate();
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove token
     navigate("/login"); // Redirect to login page
-  }
+  };
   return (
-    <header className="header" >
+    <header className="header">
       <div className="menu-icon">
         <BsJustify className="icon" onClick={toggleSidebar} />
       </div>
@@ -22,11 +22,12 @@ function AdminHeader({toggleSidebar}) {
         <BsSearch className="icon" />
       </div> */}
       <div className="header-right">
-        <BsFillBellFill className="icon" />
-        <BsFillEnvelopeFill className="icon" />
-        <BsPersonCircle className="icon" />
-        <button onClick={handleLogout} className="text-[#ff724a] border-emerald-50 rounded-md hover:bg-emerald-50">Logout</button>
-
+        <button
+          onClick={handleLogout}
+          className="text-[#ff724a] border-emerald-50 rounded-md hover:bg-emerald-50"
+        >
+          Logout
+        </button>
       </div>
     </header>
   );

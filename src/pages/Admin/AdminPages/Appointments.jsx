@@ -19,7 +19,7 @@ import { toast } from "@/hooks/use-toast";
 function Appointments() {
   const { data: appointmentData, isLoading } = useQuery({
     queryKey: ["doctorAppointments"],
-    queryFn: showapp,
+    queryFn: showappointments,
     retry: 3,
   });
 
@@ -116,55 +116,13 @@ function Appointments() {
     </div>
   );
 
-  const handleShowPatientDetails = (appointment) => {
-    setSelectedPatient({
-      name: appointment.patient_name,
-      location: appointment.location,
-      email: appointment.patient_email,
-      phone: appointment.patient_phone,
-    });
-    setIsDialogOpen(true);
-  };
 
-  const handleAccept = (appointment) => {
-    console.log("Appointment Data:", appointment);
 
-    const acceptData = {
-      id: appointment.id,
-      doctor_id: appointment.doctor_id, // Ensure this field is included
-      date: appointment.date, // Ensure this field is included
-      time: appointment.time, // Ensure this field is included
-      status: "confirmed", // Update the status
-    };
-    console.log("Accept Data:", acceptData);
 
-    acceptMutate(acceptData);
-  };
-
-  const handleReject = (id) => {
-    console.log(`Rejecting appointment with ID: ${id}`);
-    // Add logic for rejecting the appointment
-  };
 
   return (
     <div>
-      {/* Patient Details Dialog */}
-      {selectedPatient && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Patient Details</DialogTitle>
-              <DialogDescription>
-                <p>Name: {selectedPatient.name}</p>
-                <p>Location: {selectedPatient.location}</p>
-                <p>Email: {selectedPatient.email}</p>
-                <p>Phone: {selectedPatient.phone}</p>
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-      )}
-
+      
       <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table className="w-full text-sm text-left rtl:text-right text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
@@ -229,7 +187,7 @@ function Appointments() {
                 </td>
                 <td
                   className="px-6 py-4 cursor-pointer text-blue-500 hover:underline"
-                  onClick={() => handleShowPatientDetails(appointment)}
+                 
                 >
                   {appointment.user_id}
                 </td>

@@ -1,9 +1,11 @@
 import { showSpecialities } from "@/api/admin";
+import Loader from "@/components/Loader";
+import { toast, useToast } from "@/hooks/use-toast";
 import { faEye, faEyeSlash } from "@fortawesome/free-regular-svg-icons";
 import { faMap } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaUserDoctor } from "react-icons/fa6";
 import {
   MapContainer,
@@ -27,14 +29,13 @@ function AddDoctor() {
   });
 
   isSuccess && console.log(specialitiesData?.data);
-  const [profileImage, setProfileImage] = useState(null);
 
   const [location, setLocation] = useState(null); // Stores coordinates
   const [locationName, setLocationName] = useState(""); // Stores location name
   const [searchQuery, setSearchQuery] = useState(""); // Stores search input
   const [searchResults, setSearchResults] = useState([]); // Stores search results
   const [availability, setAvailability] = useState([]); // State for availability data
-
+  const [loading, setLoading] = useState(false);
   const [formValues, setFormValues] = useState({
     name: "",
     speciality_id: "",
@@ -47,7 +48,6 @@ function AddDoctor() {
     longitude: "",
     latitude: "",
     location_name: "",
-    profile_picture: null,
     gender: "",
     date_of_birth: "",
     phone_number: "",
@@ -137,39 +137,103 @@ function AddDoctor() {
     setFormValues({ ...formValues, [name]: value });
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.size > 255 * 1024) {
-      alert("File size must be less than 255KB");
+  console.log("Form data:", formValues);
+
+  const validateForm = () => {
+    const errors = [];
+
+    // Name validation
+    if (!formValues.name.trim()) {
+      errors.push("Name is required.");
+    }
+
+    // Gender validation
+    if (!formValues.gender) {
+      errors.push("Gender is required.");
+    }
+
+    // Location validation
+    if (!location) {
+      errors.push("Please select a location on the map.");
+    }
+
+    // Specialty validation
+    if (!formValues.speciality_id) {
+      errors.push("Specialty is required.");
+    }
+
+    // Experience validation
+    if (!formValues.experience) {
+      errors.push("Experience is required.");
+    } else if (isNaN(formValues.experience) || formValues.experience < 0) {
+      errors.push("Experience must be a valid number.");
+    }
+
+    // Fee validation
+    if (!formValues.fee) {
+      errors.push("Appointment fee is required.");
+    } else if (isNaN(formValues.fee) || formValues.fee < 0) {
+      errors.push("Fee must be a valid number.");
+    }
+
+    // Phone number validation
+    if (!formValues.phone_number) {
+      errors.push("Phone number is required.");
+    } else if (!/^\d{10}$/.test(formValues.phone_number)) {
+      errors.push("Phone number must be 10 digits.");
+    }
+
+    // Bio validation
+    if (!formValues.bio.trim()) {
+      errors.push("Bio is required.");
+    }
+
+    // Email validation
+    if (!formValues.email) {
+      errors.push("Email is required.");
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
+      errors.push("Invalid email address.");
+    }
+
+    // Date of birth validation
+    if (!formValues.date_of_birth) {
+      errors.push("Date of birth is required.");
+    }
+
+    // Password validation
+    if (!formValues.password) {
+      errors.push("Password is required.");
+    } else if (formValues.password.length < 6) {
+      errors.push("Password must be at least 6 characters.");
+    }
+
+    // Confirm password validation
+    if (!formValues.password_confirmation) {
+      errors.push("Confirm password is required.");
+    } else if (formValues.password !== formValues.password_confirmation) {
+      errors.push("Passwords do not match.");
+    }
+
+    return errors;
+  };
+
+  const submit = async () => {
+    const errors = validateForm();
+    if (errors.length > 0) {
+      setIsError(true);
+      setErrorMessage(errors);
       return;
     }
-    setFormValues({ ...formValues, profile_picture: file });
-    setProfileImage(URL.createObjectURL(file));
-  };
-  console.log("Form data:", formValues);
-  const submit = async () => {
-    //except availability
-    // Object.entries(formValues).forEach(([key, value]) => {
-    //   if (key !== "availability") {
-    //     formData.append(key, value);
-    //   }
-    // });
-
-    // Append availability properly (each date separately)
-    // formValues.availability.forEach((slot, index) => {
-    //   formData.append(`availability[${index}][date]`, slot.date);
-    //   slot.times.forEach((time, timeIndex) => {
-    //     formData.append(`availability[${index}][times][${timeIndex}]`, time);
-    //   });
-    // });
 
     const availabilityJson = JSON.stringify(availability);
     console.log("availability json", availabilityJson);
     console.log("Availability before submit: ", availability);
-    // formData.append("availability", availabilityJson);
-    // for (let pair of formData.entries()) {
-    //   console.log(pair[0], pair[1]);
-    // }
+
+    const formattedAvailability = availability.map((slot) => ({
+      ...slot,
+      times: slot.times.map((time) => convertTo12Hour(time)),
+    }));
+
     const payload = {
       ...formValues,
       longitude: formValues.longitude.toString(), // Ensure longitude is a string
@@ -177,13 +241,14 @@ function AddDoctor() {
       speciality_id: Number(formValues.speciality_id), // Ensure speciality_id is a number
       experience: Number(formValues.experience),
       // availability: JSON.stringify(availability), // Serialize availability as JSON
-      profileImage: null,
-      availability: availability,
+      availability: formattedAvailability,
     };
 
     console.log("Payload:", payload);
 
     try {
+      setLoading(true);
+
       const response = await fetch("http://127.0.0.1:8000/api/admin/doctor", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -197,7 +262,7 @@ function AddDoctor() {
       if (!response.ok) {
         if (response.status === 422) {
           console.log(responseData.message);
-          setErrorMessage(responseData.message);
+          // setErrorMessage(responseData.message);
           setIsError(true);
         }
         throw new Error(responseData.message || "Registration failed!");
@@ -217,7 +282,6 @@ function AddDoctor() {
         longitude: "",
         latitude: "",
         location_name: "",
-        profile_picture: "",
         gender: "",
         date_of_birth: "",
         phone_number: "",
@@ -231,6 +295,8 @@ function AddDoctor() {
     } catch (error) {
       console.error("Error submitting form:", error.message);
       alert("Error registering user. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -276,6 +342,24 @@ function AddDoctor() {
     const convertedHours = h % 12 || 12; // Convert 0 to 12 for midnight
     return `${convertedHours}:${minutes} ${ampm}`;
   }
+  useEffect(() => {
+    if (isError && errorMessage.length > 0) {
+      errorMessage.forEach((error) => {
+        toast({
+          title: "Error",
+          description: error,
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          variant: "destructive",
+        });
+      });
+    }
+  }, [isError, errorMessage]);
+
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <div className="flex justify-start py-10 lg:px-40 sm:px-5 md:px-20 text-black bg-white">
@@ -287,16 +371,8 @@ function AddDoctor() {
         }}
         className="flex flex-wrap gap-5"
       >
-        {isError && (
-          <span className="text-red-500 text-sm">
-            {Object.values(errorMessage)
-              .flat()
-              .map((error, index) => (
-                <div key={index}>{error}</div>
-              ))}
-          </span>
-        )}
-        {/* Profile Picture */}
+        {isError && <span className="text-red-500 text-sm"></span>}
+        {/* Profile Picture
         <div className="w-full flex flex-col gap-3">
           <div className="flex items-center justify-center h-28 w-28 border-4 border-black rounded-full bg-gray-100">
             {profileImage ? (
@@ -316,7 +392,7 @@ function AddDoctor() {
             accept="image/*"
             onChange={handleFileChange}
           />
-        </div>
+        </div> */}
 
         {/* Doctor Name */}
         <div className={fields}>
@@ -664,9 +740,10 @@ function AddDoctor() {
         <div className="flex w-full mt-4">
           <button
             type="submit"
-            className="bg-blue-500 text-white py-2 px-6 rounded hover:bg-blue-600"
+            className="bg-blue-500 text-white py-2 px-6 rounded hover:bg-blue-600 disabled:opacity-50"
+            disabled={loading}
           >
-            Submit
+            {loading ? "Adding..." : "Add Doctor"}
           </button>
         </div>
       </form>

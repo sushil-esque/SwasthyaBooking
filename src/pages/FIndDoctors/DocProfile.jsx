@@ -6,19 +6,20 @@ import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaLocationDot } from "react-icons/fa6";
 import { MdFavorite } from "react-icons/md";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { addFavorite, bookAppointment } from "@/api/user";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { addFavorite, bookAppointment, getFavorites } from "@/api/user";
 import AuthContext from "@/components/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import Loader from "@/components/Loader";
 
 function DocProfile() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
-
+  const queryClient = useQueryClient(); // Initialize queryClient
   const params = useParams();
   const { id: doctorId } = params; // Doctor ID from URL
   const navigate = useNavigate();
-  const {isAuthenticated} = useContext(AuthContext);
+  const { isAuthenticated } = useContext(AuthContext);
   const {
     register,
     handleSubmit,
@@ -35,20 +36,34 @@ function DocProfile() {
     mutationFn: addFavorite,
     onSuccess: () => {
       console.log("successfully added to favorites");
+      // Optimistically update the cache without reloading
+      queryClient.setQueryData(["favorites"], (oldData) => {
+        if (!oldData || !oldData.data) return oldData;
+        return {
+          ...oldData,
+          data: [...oldData.data, { doctor_id: doctorId }], // Add the new favorite to the cached data
+        };
+      });
       toast({
         title: "Successfully added to favorites",
         variant: "default",
-      })
+      });
     },
   });
 
   const { mutate: bookAppointmentMutate, isPending: isBooking } = useMutation({
     mutationFn: bookAppointment,
     onSuccess: () => {
-      alert("Appointment booked successfully");
+      toast({
+        title: "Successfully requested for an appointment",
+        variant: "default",
+      });
     },
     onError: () => {
-      alert("Failed to book appointment");
+      toast({
+        title: "Failed to request for an appointment",
+        variant: "destructive",
+      });
     },
   });
 
@@ -70,24 +85,43 @@ function DocProfile() {
     queryFn: () => fetchDoctorById(doctorId), // Fetch function
     retry: 3, // Retry if API fails
   });
-  const {
-    data: specializationData,
-    isLoading: specializationLoading,
-    isSuccess,
-  } = useQuery({
-    queryKey: ["specializations"],
-    queryFn: fetchSpecialities,
+  const { data: specializationData, isLoading: specializationLoading } =
+    useQuery({
+      queryKey: ["specializations"],
+      queryFn: fetchSpecialities,
+      retry: 3,
+    });
+
+  const { data: favoriteData, isLoading: favoriteLoading } = useQuery({
+    queryKey: ["favorites"],
+    queryFn: getFavorites,
     retry: 3,
+    enabled: isAuthenticated, // Only run when the user is authenticated
   });
 
-
   // console.log(curdata);
-  if (isLoading) return <div>Loading doctor details...</div>;
+
+  if (isLoading || specializationLoading) return;
+  <Loader />;
+
   if (error) return <div>Error fetching doctor details</div>;
 
   // Ensure curdata is defined before rendering details
 
   const selectedDate = watch("selectedDate");
+
+  const currentDate = new Date().toISOString().split("T")[0];
+  const filteredAvailableDates = doctor.doctor_available?.filter((slot) => {
+    const slotDate = new Date(slot.date).toISOString().split("T")[0];
+    return slotDate >= currentDate;
+  });
+  console.log("Filtered available dates:", filteredAvailableDates);
+  const isDoctorFavorited = () => {
+    if (!favoriteData || !favoriteData.data || !doctorId) return false;
+    return favoriteData.data.some(
+      (favorite) => favorite.doctor_id.toString() === doctorId
+    );
+  };
   const onSubmit = (data) => {
     if (!isAuthenticated) {
       alert("Please login to book an appointment.");
@@ -112,7 +146,6 @@ function DocProfile() {
     );
     return specialization ? specialization.name : "Unknown Specialization";
   };
-
 
   return (
     <>
@@ -150,7 +183,9 @@ function DocProfile() {
                 />
               </p>
               <div className="spec-exp">
-                <p style={{ margin: "0" }}>{getSpecializationName(doctor.speciality_id)}</p>
+                <p style={{ margin: "0" }}>
+                  {getSpecializationName(doctor.speciality_id)}
+                </p>
                 <button>{doctor.experience} years</button>
               </div>
               <div className="docAbout">
@@ -172,23 +207,24 @@ function DocProfile() {
               </div>
               <div className="mt-4 text-l font-bold text-slate-500 flex items-center ">
                 <FaLocationDot className="text-2xl" />
-                <div className="w-[60%] ml-1">
-                {doctor.location_name}
-
-                </div>
-                {
-                  isAuthenticated && (
-                    <button
+                <div className="w-[60%] ml-1">{doctor.location_name}</div>
+                {isAuthenticated && (
+                  <button
                     className="ml-auto flex justify-center items-center p-1 bg-white border-none hover:text-slate-600"
                     onClick={() => favoriteMutate(doctorId)} // Pass doctor ID
-                    disabled={isPending} // Disable button while adding
+                    disabled={isPending || isDoctorFavorited()} // Disable button while adding
                   >
-                    <MdFavorite className="text-xl" />{" "}
-                    {isPending ? "Adding..." : "Add to Favorites"}
+                    <MdFavorite
+                      className="text-xl"
+                      style={{ color: isDoctorFavorited() ? "red" : "inherit" }}
+                    />{" "}
+                    {isPending
+                      ? "Adding..."
+                      : isDoctorFavorited()
+                      ? "favorited"
+                      : "Add to Favorites"}
                   </button>
-                  )
-                }
-               
+                )}
               </div>
             </div>
           </div>
@@ -198,7 +234,7 @@ function DocProfile() {
               style={{ display: "flex", flexDirection: "column", gap: "20px" }}
             >
               {console.log(doctor.doctor_available)}
-              {doctor.doctor_available?.map((slot) => (
+              {filteredAvailableDates?.map((slot) => (
                 <div key={slot.id} style={{ display: "flex", gap: "30px" }}>
                   <label>
                     <input
@@ -210,19 +246,16 @@ function DocProfile() {
                   </label>
                   {selectedDate === slot.date && (
                     <div className="time-slots">
-                      {slot.available_times?.map(({ id, time , booked }) => (
-
+                      {slot.available_times?.map(({ id, time, booked }) => (
                         <label key={id}>
-                          
-                            <input
+                          <input
                             type="radio"
                             value={time}
                             {...register(`selectedTime`, { required: true })}
                             disabled={booked}
                           />
                           {time} {booked && "(Booked)"}
-                         
-                          </label>
+                        </label>
                       ))}
                     </div>
                   )}
@@ -232,7 +265,10 @@ function DocProfile() {
             {errors.selectedDate && <p>Please select a date</p>}
             {errors.selectedTime && <p>Please select a time slot</p>}
             <div className="appointmentButton">
-              <button type="submit">{isBooking ? "Booking..." : "Book Now"}</button>
+              <button type="submit">
+                {isBooking ? "Requesting..." : "Request to book"}
+              </button>
+              {}
             </div>
           </form>
         </div>

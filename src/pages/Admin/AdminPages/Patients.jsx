@@ -10,6 +10,7 @@ function Patients() {
   });
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
   // Sort function
   const sortedData = () => {
@@ -84,6 +85,10 @@ function Patients() {
                 <SortArrows columnKey="id" />
               </th>
               <th
+                              className="px-6 py-3"
+
+              >Profile Picture</th>
+              <th
                 scope="col"
                 className="px-6 py-3 cursor-pointer"
                 onClick={() => requestSort("name")}
@@ -99,33 +104,27 @@ function Patients() {
                 Email
                 <SortArrows columnKey="email" />
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3"
-              >
-                Action
+              <th scope="col" className="px-6 py-3">
+                Phone no.
               </th>
             </tr>
           </thead>
           <tbody>
             {finalData?.map((patient) => (
               <tr key={patient.id} className="bg-white border-b">
-                <th
+                <td
                   scope="row"
                   className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
                 >
                   {patient.id}
-                </th>
-                <td className="px-6 py-4">{patient.user.name}</td>
-                <td className="px-6 py-4">{patient.user.email}</td>
-                <td className="px-6 py-4">
-                  <a
-                    href="#"
-                    className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                  >
-                    Edit
-                  </a>
                 </td>
+                <td className="px-6 py-4">
+                  <img src={`${IMAGE_BASE_URL}${patient.profile_picture}`} className="w-10 h-10" alt="" />
+                </td>
+
+                <td className="px-6 py-4">{patient.name}</td>
+                <td className="px-6 py-4">{patient.email}</td>
+                <td className="px-6 py-4">{patient.phone_number}</td>
               </tr>
             ))}
           </tbody>

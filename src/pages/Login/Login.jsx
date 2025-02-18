@@ -38,10 +38,11 @@ function Login() {
         },
         body: JSON.stringify(loginJson),
       });
-      if (!rawData.ok) {
-        throw new Error("Login Failed!!!");
-      }
+      
       const data = await rawData.json();
+      if (!rawData.ok) {
+        throw new Error(`${data.error}`);
+      }
       console.log(data);
 
       const { token, user } = data;
@@ -64,8 +65,7 @@ function Login() {
       } else {
         // window.alert("Bad credentials");
         toast({
-          title: "Bad credentials",
-          description: "credentials don't match",
+          title: "something went wrong",
         });
         console.warn("Access token not found in response");
       }
@@ -85,7 +85,7 @@ function Login() {
     } catch (error) {
       // window.alert("Bad credentials");
       toast({
-        title: "Error logging in ",
+        title: `${error}`,
         variant: "destructive",
       });
 

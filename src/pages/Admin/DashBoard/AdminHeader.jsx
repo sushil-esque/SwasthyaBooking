@@ -18,13 +18,9 @@ function AdminHeader({toggleSidebar}) {
       <div className="menu-icon">
         <BsJustify className="icon" onClick={toggleSidebar} />
       </div>
-      {/* <div className="header-left">
-        <BsSearch className="icon" />
-      </div> */}
+    
       <div className="header-right">
-        <BsFillBellFill className="icon" />
-        <BsFillEnvelopeFill className="icon" />
-        <BsPersonCircle className="icon" />
+       
         <button onClick={handleLogout} className="text-[#ff724a] border-emerald-50 rounded-md hover:bg-emerald-50">Logout</button>
       </div>
     </header>

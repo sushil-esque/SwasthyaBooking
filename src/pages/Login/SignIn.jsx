@@ -19,6 +19,7 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { toast } from "@/hooks/use-toast";
 
 function SignIn() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -107,10 +108,69 @@ function SignIn() {
 
   // Handle form submission
   const submit = async () => {
-    if (!location) {
-      alert("Please select a location on the map.");
-      return;
-    }
+      // Validation checks
+  if (!name.trim()) {
+    alert("Name is required.");
+    return;
+  }
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    toast({
+      title: "plese enter a valid email address",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (phone.length !== 10) {
+    toast({
+      title: "Phone number must be at least 10 digits.",
+      variant: "destructive", 
+    })
+    return;
+  }
+
+  if (!birthDate) {
+    toast({
+      title: "Please select your date of birth.",
+      variant: "destructive",
+    })
+    return;
+  }
+
+  if (!gender) {
+    toast({
+      title: "Please select your gender.",
+      variant: "destructive",
+    })
+    return;
+  }
+
+  if (password.length < 6) {
+    toast({
+      title: "Password must be at least 6 characters.",
+      variant: "destructive",
+    })
+    return;
+  }
+
+  if (password !== passwordConfirmation) {
+    toast({
+      title: "Passwords do not match.",
+      variant: "destructive",
+    })
+    return;
+  }
+
+  if (!location) {
+    toast({
+      title: "Please select a location on the map.",
+      variant: "destructive",
+    })
+    return;
+  }
+    
 
     const formData = new FormData();
     formData.append("name", name);

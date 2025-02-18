@@ -13,7 +13,8 @@
   position: absolute;
   z-index: 0;
   top: 0;
-    /* background-color: white; */
+    background-color: white;
+    opacity: 40%;
 }
 .lds-dual-ring:after {
   content: " ";

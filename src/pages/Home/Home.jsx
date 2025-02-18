@@ -1,8 +1,6 @@
-import { Button } from "@/components/ui/button";
-import FindDoctors from "../FindDoctors";
+import { NavLink } from "react-router-dom";
 import DoctorPage from "../FIndDoctors/DoctorPage";
 import "./home.css";
-import { NavLink } from "react-router-dom";
 
 function Home() {
   return (
@@ -33,10 +31,10 @@ function Home() {
               fontStyle: "italic",
             }}
           >
-            <p>Find Top-Rated Doctors Near You</p>
-            <p>Get Personalized Healthcare Recommendations</p>
-            <p>Book Appointments Instantly</p>
-            <p>Access Expert Medical Advice Anytime</p>
+            <p>Find Trusted Doctors in Your Area Effortlessly</p>
+            <p>Browse Doctor Profiles and Specialties with Ease</p>
+            <p>Get Personalized Doctor Recommendations Instantly</p>
+            <p>View Available Appointment Slots and Book Seamlessly</p>
           </div>
           <NavLink to={"/findDoctors"}>
             <button>BOOK NOW</button>

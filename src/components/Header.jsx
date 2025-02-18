@@ -14,26 +14,25 @@ function Header() {
   const navigate = useNavigate();
   const [isActive, setIsActive] = useState(false);
   const token = localStorage.getItem("token");
-const { logout } =  useContext(AuthContext);
+  const { logout } = useContext(AuthContext);
 
   const handleLogout = () => {
-   // window.alert("You are logged out");
+    // window.alert("You are logged out");
     // window.location.reload();
     logout();
 
     toast({
       title: "You are logged out",
       description: "You have logged out successfully",
-    })
+    });
   };
 
   return (
     <div className="headerMain">
       <div className="logo">
         <NavLink to={"/home"}>
-        <img src="/logo.png" alt="logo" />
+          <img src="/logo.png" alt="logo" />
         </NavLink>
-       
       </div>
       <div className="navigation">
         <nav>
@@ -52,12 +51,12 @@ const { logout } =  useContext(AuthContext);
             </li>
             {token && (
               <li>
-                <NavLink to={"/recommendedDoctors"}>Recommended Doctors</NavLink>
+                <NavLink to={"/recommendedDoctors"}>
+                  Recommended Doctors
+                </NavLink>
               </li>
             )}
-         
           </ul>
-
 
           {token ? (
             //   <li onClick={handleLogout} >
@@ -98,11 +97,6 @@ const { logout } =  useContext(AuthContext);
                                 <button className="signin">Sign In</button>
                             </NavLink>
                         </li> */}
-                        {token &&(
-                          <FaBell />
-                        )
-                        
-                        }
         </nav>
       </div>
     </div>

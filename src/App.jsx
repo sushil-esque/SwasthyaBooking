@@ -37,6 +37,8 @@ import RecomendedDoctors from "./pages/Recommended/RecomendedDoctors";
 import { Toaster } from "./components/ui/toaster";
 import Specializations from "./pages/Admin/AdminPages/Specializations";
 import ChangePasswordDoctor from "./pages/Doctor/DoctorPages/ChangePasswordDoctor";
+import NearbyDoctors from "./pages/FIndDoctors/NearbyDoctors";
+import AdminProfileUpdate from "./pages/Admin/AdminPages/AdminProfileUpdate";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -49,13 +51,12 @@ const router = createBrowserRouter(
           </Protected>
         }
       >
-        <Route index element={<AdminHome />} />
-        <Route path="dashboard" element={<AdminHome />} />
-        <Route path="appointments" element={<Appointments />} />
+        <Route index element={<AddDoctor />} />
         <Route path="addDoctors" element={<AddDoctor />} />
         <Route path="doctorList" element={<DoctorList />} />
         <Route path="patients" element={<Patients />} />
         <Route path="specializations" element={<Specializations />} />
+        <Route path="updateProfile" element={<AdminProfileUpdate/>}/>
       </Route>
       <Route
         path="/doctorDashboard"
@@ -82,6 +83,7 @@ const router = createBrowserRouter(
         <Route path="healthPackages" element={<HealthPackages />} />
         <Route path="login" element={<Login />} />
         <Route path="signin" element={<SignIn />} />
+        <Route path="nearbyDoctors" element={<NearbyDoctors />} />
         <Route
           path="userDashboard"
           element={

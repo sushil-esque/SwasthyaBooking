@@ -154,6 +154,8 @@ function UpdateProfile() {
     };
     console.log(updatedData); // Send this data to your backend
     try {
+      setUpdating(true);
+
       const response = await fetch(`${BASE_URL}doctor/profileUpdate`, {
         method: "put",
         headers: {
@@ -188,7 +190,6 @@ function UpdateProfile() {
         }
       }
 
-      setUpdating(true);
 
       alert("Profile updated successfully");
     } catch (error) {
@@ -413,12 +414,7 @@ function UpdateProfile() {
 
                 {/* Save and Cancel Buttons */}
                 <div className="flex justify-end space-x-4">
-                  <button
-                    type="button"
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
+                 
                   <button
                     type="submit"
                     className="px-4 py-2 bg-indigo-800 text-white rounded-lg hover:bg-indigo-700"

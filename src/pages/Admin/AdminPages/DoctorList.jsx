@@ -151,9 +151,6 @@ function DoctorList() {
               <th scope="col" className="px-6 py-3">
                 Available Times
               </th>
-              <th scope="col" className="px-6 py-3">
-                Action
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -163,7 +160,9 @@ function DoctorList() {
                   {doctor.id}
                 </td>
                 <td className="px-6 py-4">
-                  {console.log(`http://127.0.0.1:8000${doctor.profile_picture}`)}
+                  {console.log(
+                    `http://127.0.0.1:8000${doctor.profile_picture}`
+                  )}
                   <img
                     src={`http://127.0.0.1:8000${doctor.profile_picture}`}
                     alt="Profile"
@@ -187,14 +186,6 @@ function DoctorList() {
                       </ul>
                     </div>
                   ))}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <a
-                    href="#"
-                    className="font-medium text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </a>
                 </td>
               </tr>
             ))}

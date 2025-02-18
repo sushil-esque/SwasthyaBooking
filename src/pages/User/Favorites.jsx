@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 function Favorites() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
@@ -49,7 +50,6 @@ function Favorites() {
   const {
     data: specializationData,
     isLoading: specializationLoading,
-    isSuccess,
   } = useQuery({
     queryKey: ["specializations"],
     queryFn: fetchSpecialities,
@@ -88,7 +88,7 @@ function Favorites() {
   };
  
  
-  if (loading  || favoriteLoading || specializationLoading) {
+  if (loading  || favoriteLoading || specializationLoading || isPending) {
     return <Loader />;
   }
   return (
@@ -111,7 +111,7 @@ function Favorites() {
                   <img
                     src={
                       doctor?.profile_picture
-                        ? `${BASE_URL}${doctor.profile_picture}`
+                        ? `${IMAGE_BASE_URL}${doctor.profile_picture}`
                         : "/public/doctorPic.jpg"
                     }
                     alt="Doctor"
