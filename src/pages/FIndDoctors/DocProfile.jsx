@@ -231,18 +231,21 @@ function DocProfile() {
           <form className="availability" onSubmit={handleSubmit(onSubmit)}>
             <h4>Available Appointments:</h4>
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+              style={{ display: "flex", flexDirection: "column" }}
             >
               {console.log(doctor.doctor_available)}
               {filteredAvailableDates?.map((slot) => (
-                <div key={slot.id} style={{ display: "flex", gap: "30px" }}>
-                  <label>
+                <div key={slot.id} style={{ display: "flex", gap: "30px", alignItems: "center"}}>
+                  <label className="flex">
                     <input
                       type="radio"
                       value={slot.date}
                       {...register("selectedDate", { required: true })}
                     />
+                    <p>
                     {slot.date}
+
+                    </p>
                   </label>
                   {selectedDate === slot.date && (
                     <div className="time-slots">

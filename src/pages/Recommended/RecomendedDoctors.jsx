@@ -7,7 +7,11 @@ import Loader from "../../components/Loader";
 import "../FIndDoctors/doctorPage.css";
 import { NavLink } from "react-router-dom";
 import { FaLocationDot } from "react-icons/fa6";
-import { faFacebook, faInstagramSquare, faTwitter } from "@fortawesome/free-brands-svg-icons";
+import {
+  faFacebook,
+  faInstagramSquare,
+  faTwitter,
+} from "@fortawesome/free-brands-svg-icons";
 
 function RecommendedDoctors() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -19,7 +23,16 @@ function RecommendedDoctors() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      date: "",
+      time: "",
+      preferred_specialty: "",
+      min_fee: 0,
+      max_fee: 1000,
+      max_distance: 50, // Default max distance
+    },
+  });
 
   const fetchSpecialities = async () => {
     const response = await fetch(`${BASE_URL}speciality?active=true`);
@@ -34,7 +47,7 @@ function RecommendedDoctors() {
       retry: 3,
     });
 
-  const { mutate: fetchRecommendations, isLoading: isPosting } = useMutation({
+  const { mutate: fetchRecommendations, isPending: isPosting } = useMutation({
     mutationFn: (data) =>
       axiosWithAuth.post(`${BASE_URL}user/recommended-doctors`, data),
     onSuccess: (data) => {
@@ -61,6 +74,7 @@ function RecommendedDoctors() {
       preferred_specialty: parseInt(data.preferred_specialty),
       min_fee: parseInt(data.min_fee),
       max_fee: parseInt(data.max_fee),
+      max_distance: parseInt(data.max_distance), // Include max_distance in the payload
     };
     fetchRecommendations(payload);
   };
@@ -82,7 +96,7 @@ function RecommendedDoctors() {
         <div className="flex justify-center">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-wrap justify-between gap-4 mt-8 p-4 bg-white rounded-lg shadow-md"
+            className="flex flex-wrap justify-between gap-4 mt-8 p-4 bg-white rounded-lg shadow-md h-[70px] "
           >
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700">
@@ -91,7 +105,7 @@ function RecommendedDoctors() {
               <input
                 type="date"
                 {...register("date")}
-                className="w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               />
               {errors.date && (
                 <p className="text-red-500 text-sm">{errors.date.message}</p>
@@ -105,7 +119,7 @@ function RecommendedDoctors() {
               <input
                 type="time"
                 {...register("time")}
-                className="w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               />
               {errors.time && (
                 <p className="text-red-500 text-sm">{errors.time.message}</p>
@@ -118,7 +132,7 @@ function RecommendedDoctors() {
               </label>
               <select
                 {...register("preferred_specialty")}
-                className="w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">Select Specialty</option>
                 {specializationData?.data.map((speciality) => (
@@ -141,7 +155,7 @@ function RecommendedDoctors() {
               <input
                 type="number"
                 {...register("min_fee")}
-                className="w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               />
               {errors.min_fee && (
                 <p className="text-red-500 text-sm">{errors.min_fee.message}</p>
@@ -155,19 +169,45 @@ function RecommendedDoctors() {
               <input
                 type="number"
                 {...register("max_fee")}
-                className="w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               />
               {errors.max_fee && (
                 <p className="text-red-500 text-sm">{errors.max_fee.message}</p>
               )}
             </div>
+            <div className="flex flex-col w-[200px]">
+              <label className="text-sm font-medium text-gray-700">
+                Max distance (in km)
+              </label>
+              <input
+                type="number"
+                {...register("max_distance", {
+                  required: "Max distance is required",
+                  min: {
+                    value: 1,
+                    message: "Max distance must be at least 1 km",
+                  },
+                  max: {
+                    value: 50,
+                    message: "Max distance can't exceed 50",
+                  },
+                })}
+                className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              
+                {errors.max_distance && (
+                  <span className="text-red-500 text-sm">
+                    {errors.max_distance.message}
+                  </span>
+                )}
+            </div>
 
-            <div className="flex items-end">
+            <div className="mt-[19px]">
               <button
                 type="submit"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 w-[167px]"
               >
-                Get Recommendations
+                {isPosting ? "Loading..." : "Get recommendations"}
               </button>
             </div>
           </form>
@@ -178,52 +218,52 @@ function RecommendedDoctors() {
         <h1>Doctors near you</h1>
       </div>
 
-     <div className="cardContainer">
-             {recommendations?.length > 0 ? (
-               recommendations?.map((doctor, index) => (
-                 <NavLink
-                   to={`/findDoctors/${doctor.id}`}
-                   key={index}
-                   className="docCard"
-                 >
-                   <div>
-                     <div className="docImage">
-                       <img
-                         src={
-                           doctor?.profile_picture
-                             ? `${IMAGE_BASE_URL}${doctor.profile_picture}`
-                             : "/public/doctorPic.jpg"
-                         }
-                         alt="Doctor"
-                       />
-                     </div>
-                     <div className="docSpeciality">
-                       {getSpecializationName(doctor?.speciality_id)}
-                     </div>
-                     <div className="doctorName">Dr. {doctor?.name}</div>
-                     <div className="docDesc">
-                       <FaLocationDot className="text-2xl" />{" "}
-                       <span>
-                         {doctor.location_name
-                           ? doctor.location_name.split(" ").slice(0, 3).join(" ")
-                           : "Location not available"}
-                       </span>
-                     </div>
-                     <div className="text-sm text-gray-600 flex justify-center italic">
-                       Distance from you: {doctor?.distance} KM
-                     </div>
-                     <div className="socials">
-                       <FontAwesomeIcon icon={faInstagramSquare} />
-                       <FontAwesomeIcon icon={faFacebook} />
-                       <FontAwesomeIcon icon={faTwitter} />
-                     </div>
-                   </div>
-                 </NavLink>
-               ))
-             ) : (
-               <p className="no-results">No doctors found.</p>
-             )}
-           </div>
+      <div className="cardContainer">
+        {recommendations?.length > 0 ? (
+          recommendations?.map((doctor, index) => (
+            <NavLink
+              to={`/findDoctors/${doctor.id}`}
+              key={index}
+              className="docCard"
+            >
+              <div>
+                <div className="docImage">
+                  <img
+                    src={
+                      doctor?.profile_picture
+                        ? `${IMAGE_BASE_URL}${doctor.profile_picture}`
+                        : "/public/doctorPic.jpg"
+                    }
+                    alt="Doctor"
+                  />
+                </div>
+                <div className="docSpeciality">
+                  {getSpecializationName(doctor?.speciality_id)}
+                </div>
+                <div className="doctorName">Dr. {doctor?.name}</div>
+                <div className="docDesc">
+                  <FaLocationDot className="text-2xl" />{" "}
+                  <span>
+                    {doctor.location_name
+                      ? doctor.location_name.split(" ").slice(0, 3).join(" ")
+                      : "Location not available"}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600 flex justify-center italic">
+                  Distance from you: {doctor?.distance} KM
+                </div>
+                <div className="socials">
+                  <FontAwesomeIcon icon={faInstagramSquare} />
+                  <FontAwesomeIcon icon={faFacebook} />
+                  <FontAwesomeIcon icon={faTwitter} />
+                </div>
+              </div>
+            </NavLink>
+          ))
+        ) : (
+          <p className="no-results">No doctors found.</p>
+        )}
+      </div>
     </div>
   );
 }
