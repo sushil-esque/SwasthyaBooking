@@ -47,7 +47,6 @@ function Login() {
 
       const { token, user } = data;
       if (token) {
-        // alert("Login successful");
         toast({
           title: "Login successful",
           description: "You have logged in successfully",

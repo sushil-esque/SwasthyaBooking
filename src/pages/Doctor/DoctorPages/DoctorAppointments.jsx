@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDoctorAppointments, updateAppointment } from "@/api/doctor";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,9 @@ import { Input } from "@/components/ui/input";
 import Loader from "@/components/Loader";
 
 function DoctorAppointments() {
+
+  const queryClient = useQueryClient(); // Initialize queryClient
+
   const { data: appointmentData, isLoading } = useQuery({
     queryKey: ["doctorAppointments"],
     queryFn: getDoctorAppointments,
@@ -26,15 +29,41 @@ function DoctorAppointments() {
 
   const { mutate: statusMutate, isPending: statusPending } = useMutation({
     mutationFn: updateAppointment,
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Update the cached data for the "doctorAppointments" query
+      queryClient.setQueryData(["doctorAppointments"], (oldData) => {
+        if (!oldData || !oldData.data) return oldData;
+    
+        // Find the index of the updated appointment in the cached data
+        const updatedIndex = oldData.data.findIndex(
+          (appointment) => appointment.id === variables.id
+        );
+    
+        if (updatedIndex === -1) return oldData; // If the appointment is not found, return the old data
+    
+        // Create a copy of the old data and update the specific appointment
+        const updatedData = [...oldData.data];
+        updatedData[updatedIndex] = {
+          ...updatedData[updatedIndex],
+          status: variables.status, // Update the status
+        };
+    
+        // Return the updated data
+        return {
+          ...oldData,
+          data: updatedData,
+        };
+      });
+    
+      // Show a success toast
       toast({
-        title: "Appointment updated successfully",
+        title: `Appointment ${variables.status} successfully`,
         variant: "default",
       });
     },
     onError: () => {
       toast({
-        title: "Failed to accept appointment",
+        title: "Failed to update appointment",
         variant: "destructive",
       });
     },

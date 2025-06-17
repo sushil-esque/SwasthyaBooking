@@ -249,9 +249,9 @@ function ProfileSettings() {
     fetchUserData();
 
   }, []);
-  if (loading) {
-    return <Loader/>
-  }
+  // if (loading) {
+  //   return <Loader/>
+  // }
   return (
     <div className="profile-settings-container">
       <form
